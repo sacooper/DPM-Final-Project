@@ -5,6 +5,7 @@ import lejos.robotics.RangeScanner;
 import lejos.robotics.localization.MCLPoseProvider;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
+import lejos.robotics.navigation.Pose;
 import main.Main;
 
 public class Localizer extends MCLPoseProvider {
@@ -17,6 +18,7 @@ public class Localizer extends MCLPoseProvider {
 	private RangeReadings readings; 	// Readings acquired from last update
 	private DifferentialPilot pilot;	// Pilot controlling movement
 	private OdometryPoseProvider odo;
+	private static Pose startingPose;
 	
 	/****
 	 * Create a new localizer. The class extends MCLPoseProvider by 
@@ -32,6 +34,7 @@ public class Localizer extends MCLPoseProvider {
 		this.pilot = pilot;
 		this.readings = new RangeReadings(ANGLES.length);
 		this.odo = odo;
+		startingPose = null;
 	}
 
 	/****
@@ -141,4 +144,23 @@ public class Localizer extends MCLPoseProvider {
 		
 		pilot.travel(distance);
 	}
+
+	/***
+	 * Get the starting pose or null if it has not yet been determined
+	 * 
+	 * @return The starting pose or null if not yet determined
+	 */
+	public static Pose getStartingPose() {
+		synchronized(Main.POSE_LOCK){
+			return startingPose;}}
+
+	/****
+	 * Set the starting pose. Note that this should only be used once during
+	 * any one run.
+	 * 
+	 * @param startingPose The new starting pose
+	 */
+	public static void setStartingPose(Pose startingPose) {
+		synchronized(Main.POSE_LOCK){
+			Localizer.startingPose = startingPose;}}
 }

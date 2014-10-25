@@ -2,7 +2,9 @@ package main;
 
 import lejos.nxt.LCD;
 import lejos.robotics.localization.PoseProvider;
+import lejos.robotics.navigation.Pose;
 import localization.FullPoseProvider;
+import localization.Localizer;
 
 /*****
  * 
@@ -44,6 +46,7 @@ public class Display extends Thread {
 			LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2) + posStr, 0, 1);
 			LCD.drawString("H: " + Display.formattedDoubleToString(h, 2) + posStr, 0, 2);
 			LCD.drawString(currentActionAsString(), 0, 3);
+			LCD.drawString("Start: " + startingPoseAsString(), 0, 4);
 			
 			try{
 				Thread.sleep(DELAY);
@@ -117,5 +120,19 @@ public class Display extends Thread {
 			return "?????";
 		
 		}
+	}
+	
+	private static String startingPoseAsString(){
+		Pose current;
+		synchronized(Main.POSE_LOCK){
+			current = Localizer.getStartingPose();
+		}
+		if (current == null) return "";
+		
+		String x = formattedDoubleToString(current.getX(), 2),
+			   y = formattedDoubleToString(current.getX(), 2),
+			   t = formattedDoubleToString(current.getX(), 2);
+		
+		return "("+ x + ", " + y + ", " + t + ")";
 	}
 }

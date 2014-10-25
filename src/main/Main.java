@@ -16,8 +16,10 @@ import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.mapping.LineMap;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
+import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
 import localization.Localizer;
+import localization.OdometryCorrection;
 import navigation.MovementController;
 import blocks.BlockRescuer;
 
@@ -37,6 +39,8 @@ public class Main {
 	private static BlockRescuer blockRescuer;
 	private static OdometryPoseProvider odo;
 	private static Localizer localizer;
+	private static Display display;
+	private static OdometryCorrection odoCorrection;
 	
 	// TODO: Update wheel paramaters based on design
 	public static final float	 
@@ -74,6 +78,12 @@ public class Main {
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
 		
+		// Instantate a new OdometryCorrection and disable it
+		odoCorrection = new OdometryCorrection(odo);
+		odoCorrection.disable();
+		
+		display = new Display(odo);
+		
 		// Instantiate a new Localizer
 		localizer = new Localizer(pilot, scanner, odo);
 		
@@ -87,6 +97,8 @@ public class Main {
 		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, ARM);
 		
 		// moveController.travelToWaypoint(new Waypoint(75, 75, 0));
+		
+		display.start();
 		
 		Display.setCurrentAction(Display.Action.LOCALIZING);
 		localizer.localize();
@@ -161,7 +173,7 @@ public class Main {
 		
 		return currentMap;
 	}
-
+	
 	static {
 		// Add button listener to escape button to allow for exiting at any time
 		Button.ESCAPE.addButtonListener(
