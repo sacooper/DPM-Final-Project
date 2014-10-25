@@ -52,3 +52,7 @@ hs_err_pid*
 # Lejos stuff
 *.nxd
 *.nxj
+
+doc/*
+*.jpg
+*.ucls
