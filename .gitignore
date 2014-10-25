@@ -53,6 +53,6 @@ hs_err_pid*
 *.nxd
 *.nxj
 
-doc/
 *.jpg
 *.ucls
+doc/
