@@ -12,12 +12,12 @@ import lejos.nxt.SensorPort;
 import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.FixedRangeScanner;
 import lejos.robotics.RangeScanner;
+import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.mapping.LineMap;
-import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Waypoint;
-import localization.FullPoseProvider;
+import localization.Localizer;
 import navigation.MovementController;
 import blocks.BlockRescuer;
 
@@ -33,9 +33,10 @@ public class Main {
 	private static DifferentialPilot pilot;
 	private static Navigator nav;
 	private static RangeScanner scanner;
-	private static FullPoseProvider poseProvider;
 	private static MovementController moveController;
 	private static BlockRescuer blockRescuer;
+	private static OdometryPoseProvider odo;
+	private static Localizer localizer;
 	
 	// TODO: Update wheel paramaters based on design
 	public static final float	 
@@ -70,11 +71,14 @@ public class Main {
 		// Instantiate a new RangeScanner, for use in localization
 		scanner = new FixedRangeScanner(pilot, ULTRASONIC);
 		
-		// Create a full pose provider, containging both an odometer and a localizer
-		poseProvider = new FullPoseProvider(pilot, scanner);
+		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+		odo = new OdometryPoseProvider(pilot);
+		
+		// Instantiate a new Localizer
+		localizer = new Localizer(pilot, scanner, odo);
 		
 		// Instantiate a new Navigator to control movement
-		nav = new Navigator(pilot, poseProvider);
+		nav = new Navigator(pilot, odo);
 		
 		// Instantiate a new MovementController for travelling to waypoints
 		moveController = new MovementController(nav);
@@ -82,10 +86,10 @@ public class Main {
 		// Instantiate a new blockRescuer
 		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, ARM);
 		
-		moveController.travelToWaypoint(new Waypoint(75, 75, 0));
+		// moveController.travelToWaypoint(new Waypoint(75, 75, 0));
 		
 		Display.setCurrentAction(Display.Action.LOCALIZING);
-		poseProvider.getLocalizer().localize();
+		localizer.localize();
 		
 		Display.setCurrentAction(Display.Action.MOVING);
 		moveController.travelToWaypoint(pickup);

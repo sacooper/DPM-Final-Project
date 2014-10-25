@@ -7,6 +7,7 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Pose;
 import main.Main;
 
+@Deprecated
 public class FullPoseProvider implements PoseProvider {
 	
 	private boolean positionKnown;
@@ -16,7 +17,6 @@ public class FullPoseProvider implements PoseProvider {
 	
 	public FullPoseProvider(DifferentialPilot pilot, RangeScanner rs, boolean positionKnown){
 		odo = new OdometryPoseProvider(pilot);
-		localizer = new Localizer(pilot, rs);
 		this.positionKnown = positionKnown;
 	}
 	

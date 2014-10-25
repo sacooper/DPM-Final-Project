@@ -3,6 +3,7 @@ package localization;
 import lejos.robotics.RangeReadings;
 import lejos.robotics.RangeScanner;
 import lejos.robotics.localization.MCLPoseProvider;
+import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
 import main.Main;
 
@@ -15,19 +16,22 @@ public class Localizer extends MCLPoseProvider {
 
 	private RangeReadings readings; 	// Readings acquired from last update
 	private DifferentialPilot pilot;	// Pilot controlling movement
-
+	private OdometryPoseProvider odo;
+	
 	/****
 	 * Create a new localizer. The class extends MCLPoseProvider by 
 	 * interfacing the 'Main' class to acquire the necessary maps
 	 * 
 	 * @param pilot The DifferentialPilot used to move
 	 * @param scanner The RangeScanner used to acquire movements
+	 * @param odo The OdometryPoseProvider to correct
 	 */
-	public Localizer(DifferentialPilot pilot, RangeScanner scanner) {
+	public Localizer(DifferentialPilot pilot, RangeScanner scanner, OdometryPoseProvider odo) {
 		super(pilot, scanner, Main.getMap(), PARTICLES, BORDER);
 		this.getScanner().setAngles(ANGLES);
 		this.pilot = pilot;
 		this.readings = new RangeReadings(ANGLES.length);
+		this.odo = odo;
 	}
 
 	/****
