@@ -29,7 +29,9 @@ public class BlockRescuer {
 		// Stage 2: Move to block and position ourselves to pick it up
 		
 		// Stage 3: Pick up block
-		
+		this.lowerArm();
+		pilot.travel(10);
+		this.raiseArm();
 	}
 	
 	private Waypoint searchForBlock(){
@@ -37,9 +39,10 @@ public class BlockRescuer {
 	}
 	
 	public boolean dropBlock(){
+		// TODO: Check constants for dropBlock()
 		switch(this.armState){
 		case RAISED:
-			// TODO: Perform action
+			arm.rotate(-220);
 			this.armState = ArmState.DROPPED;
 			return true;
 		default:
@@ -47,31 +50,29 @@ public class BlockRescuer {
 		}
 	}
 	
-	public void resetArm(){
-		// TODO: Actions for resetArm()
+	public void raiseArm(){
+		// TODO: Check constants for raiseArm()
 		switch(this.armState){
 		case RAISED:
 			return;
 		case DROPPED:
-			// HERE
+			arm.rotate(-260);
 			break;
 		case LOWERED:
-			// HERE
+			arm.rotate(-400);
 			break;
 		}
 		this.armState = ArmState.RAISED;
 	}
 	
 	public void lowerArm(){
-		// TODO: Actions for lowerArm()
+		// TODO: Check constants for lowerArm()
 		switch(this.armState){
 		case RAISED:
-			// HERE
-			
+			arm.rotate(400);
 			break;
 		case DROPPED:
-			// HERE
-			
+			arm.rotate(260);
 			break;
 		case LOWERED:
 			return;

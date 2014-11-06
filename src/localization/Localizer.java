@@ -1,148 +1,61 @@
 package localization;
 
-import lejos.robotics.RangeReadings;
-import lejos.robotics.RangeScanner;
-import lejos.robotics.localization.MCLPoseProvider;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Pose;
 import main.Main;
 
-public class Localizer extends MCLPoseProvider {
-	// Number of particles to use in MCLPoseProvider
-	private static final int PARTICLES = 200, BORDER = 10;
-
-	// Angles to get readings at
-	private static final float[] ANGLES = { -45f, 0f, 45f };
-
-	private RangeReadings readings; 	// Readings acquired from last update
+public class Localizer {
+	private UltrasonicSensor us_scanner;
 	private DifferentialPilot pilot;	// Pilot controlling movement
 	private OdometryPoseProvider odo;
 	private static Pose startingPose;
+	private boolean[][] map;
 	
 	/****
 	 * Create a new localizer. The class extends MCLPoseProvider by 
 	 * interfacing the 'Main' class to acquire the necessary maps
 	 * 
 	 * @param pilot The DifferentialPilot used to move
-	 * @param scanner The RangeScanner used to acquire movements
+	 * @param us_scanner The RangeScanner used to acquire movements
 	 * @param odo The OdometryPoseProvider to correct
 	 */
-	public Localizer(DifferentialPilot pilot, RangeScanner scanner, OdometryPoseProvider odo) {
-		super(pilot, scanner, Main.getMap(), PARTICLES, BORDER);
-		this.getScanner().setAngles(ANGLES);
+	public Localizer(DifferentialPilot pilot, UltrasonicSensor us_scanner, OdometryPoseProvider odo) {
 		this.pilot = pilot;
-		this.readings = new RangeReadings(ANGLES.length);
 		this.odo = odo;
+		this.us_scanner = us_scanner;
 		startingPose = null;
 	}
-
-	/****
-	 * Update the readings
-	 * 
-	 * @return true iff we were able to update readings successfully
-	 */
-	private boolean updateReadings() {
-		boolean incomplete = true;
-		int count = 0;
-		float cumAngle = 0;
-		do {
-			readings = this.getScanner().getRangeValues();
-			incomplete = readings.incomplete();
-
-			if (!incomplete)
-				break;
-
-			float randAngle = -180 + 360 * (float) Math.random();
-			pilot.rotate(randAngle);
-			cumAngle += randAngle;
-			count++;
-		} while (incomplete && count < 20);
-		pilot.rotate(-cumAngle);
-		return count < 5;
-
-	}
-
-	/***
-	 * Update the particles. In the event that the update
-	 * based on the reading is unsuccessful, the particle
-	 * set it reset
-	 * 
-	 * @return true iff the update was successful
-	 */
-	private boolean updateParticles() {
-		if (!this.updateReadings()) {
-			return false;
-		}
-
-		boolean updateOK = this.update(readings);
-
-		if (!updateOK) { // either improbable readings or resample failed
-			this.generateParticles();
-		}
-
-		return updateOK;
-
-	}
-
-	/**
-	 * Check if estimated pose is accurate enough
-	 * 
-	 * @param mcl The MCLPoseProvider to check the readings of
-	 * @return true iff the current state provides a good idea of location
-	 */
-	private static boolean goodEstimate(MCLPoseProvider mcl) {
-		float sx = mcl.getSigmaX();
-		float sy = mcl.getSigmaY();
-		float xr = mcl.getXRange();
-		float yr = mcl.getYRange();
-		return sx < 5 && sy < 5 && xr < 40 && yr < 40;
-	}
-
-	/****
-	 * Localize using the current map. 
-	 */
-	public void localize() {
-		synchronized (Main.POSE_LOCK) {
-			updateParticles();
-			while (this.isBusy());
-			
-			boolean goodEst = false;
-			do {
-				if (!Localizer.goodEstimate(this)) {
-					move();
-					while (this.isBusy());
-					updateParticles();
-				}
-			} while (!goodEst);
-		}
-	}
-
-	/***
-	 * Perform a movement to obtain a better of our current pose.
-	 */
-	private void move() {
-		// TODO: Improved Movement Decion (better than random move)
-		randomMove();
-	}
-
-	private void randomMove() {
-		float angle = -180 + (float) Math.random() * 360;
-		while (this.isBusy())
-			;
-		pilot.rotate(angle);
-		float distance = (float) (Main.TILE_WIDTH * (float) Math.random());
-		// Get forward range
-		float forwardRange = this.getScanner().getRangeFinder().getRange();
-		// Don't move forward if we are near a wall
-		if (forwardRange > 180)
-			forwardRange = 30;
-		if (forwardRange < 20)
-			distance = forwardRange - 30;
-		if (distance > forwardRange - 20)
-			distance = forwardRange - 30;
+	
+	public void localize(){
+		map = Main.getBoolMap();
 		
-		pilot.travel(distance);
+		// STEP 1: GET TO CARDINAL DIRECTION
+		double oldRotateSpeed = pilot.getRotateSpeed();
+		pilot.setRotateSpeed(90);
+		pilot.rotate(360, true);
+		double distance = getFilteredData();
+		int missedWall = 0;
+		boolean saw_wall = false;
+		while (distance <= (Main.TILE_WIDTH - 5) || missedWall < 1 || !saw_wall) {
+			distance = getFilteredData();
+			if (distance > (Main.TILE_WIDTH -5))
+				++missedWall;
+			else saw_wall = true;
+		}
+		pilot.stop();
+		pilot.setRotateSpeed(oldRotateSpeed);
+		
+		// STEP 2: Travel forward over a tile, ensuring we're at the center 
+		//			of a tile with cardinal heading
+		pilot.travel(Main.TILE_WIDTH);
+		
+		// Orient ourselves
+		orient(generatePossibleStates(map));
 	}
 
 	/***
@@ -163,4 +76,161 @@ public class Localizer extends MCLPoseProvider {
 	public static void setStartingPose(Pose startingPose) {
 		synchronized(Main.POSE_LOCK){
 			Localizer.startingPose = startingPose;}}
+	
+	private static ArrayList<Position> generatePossibleStates(boolean[][] map){
+		ArrayList<Position> possible = new ArrayList<Position>();
+		// Initialize possible states based on map
+		for (int x = 0; x < Main.NUM_TILES; x++){
+			for(int y = 0; y < Main.NUM_TILES; y++){
+				if (!map[x][y]){
+					possible.add(new Position(x, y, Direction.UP, y == (Main.NUM_TILES - 1) || map[x][y+1]));
+					possible.add(new Position(x, y, Direction.DOWN, y == 0 || map[x][y-1]));
+					possible.add(new Position(x, y, Direction.RIGHT, x == (Main.NUM_TILES - 1) || map[x+1][y]));
+					possible.add(new Position(x, y, Direction.LEFT, x == 0 || map[x-1][y]));}
+			}
+		}
+		return possible;
+	}
+	
+	
+	/*******
+	 * Get a value from the ultrasonic sensor for the current distance from the
+	 * wall
+	 * 
+	 * @return A filtered value of the distance from the wall
+	 */
+	private int getFilteredData() {
+		int dist;
+
+		// do a ping
+		us_scanner.ping();
+		// wait for the ping to complete
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+		}
+
+		// there will be a delay here
+		dist = us_scanner.getDistance();
+		if (dist > 120)
+			dist = 120;
+		return dist;
+	}
+	
+	/********
+	 * Perform Localization using a known map
+	 * 
+	 * @return Number of observations made
+	 */
+	public int orient(ArrayList<Position> possible) {
+		// Current direction relative to where we started
+		Direction current = Direction.UP;	
+		
+		// Current X and Y relative to where we started, # of observations
+		int x = 0, y = 0, observations = 0;	
+		
+		while (possible.size() > 1) { // Narrow down list of states until we know where we started
+			boolean blocked = getFilteredData() < Main.TILE_WIDTH;
+			observations++;
+
+			// Filter out now invalid orientations
+			Iterator<Position> iter = possible.iterator();
+			while (iter.hasNext()){
+				Position s = iter.next();
+				if (!valid(s, new Position(x, y, current, blocked))){
+					iter.remove();}}
+			
+			if (possible.size() == 1) break;
+			
+				if (blocked) {
+					pilot.rotate(-90);
+					current = Position.rotateLeft(current);
+				} else {
+					pilot.travel(Main.TILE_WIDTH);
+					switch(current){
+					case DOWN: y--; break;
+					case LEFT: x--; break;
+					case RIGHT: x++; break;
+					case UP: y++; break;
+					default: throw new RuntimeException("Shouldn't Happen");}}
+			
+		}
+
+		if (possible.size() != 1)
+			throw new RuntimeException("No possible states");
+		
+		Position startingPoint = possible.get(0);
+
+		synchronized(Main.POSE_LOCK){		// Update odometer based on known starting location
+			double odo_x, odo_y;
+			switch(startingPoint.getDir()){	// Need to get absolute change from starting point relative to where we are
+			case DOWN:
+				odo_x = -odo.getPose().getX();
+				odo_y = -odo.getPose().getY();
+				break;
+			case LEFT:
+				odo_x = -odo.getPose().getY();
+				odo_y = odo.getPose().getX();
+				break;
+			case RIGHT:
+				odo_x = odo.getPose().getY();
+				odo_y = -odo.getPose().getX();
+				break;
+			case UP:
+				odo_x = odo.getPose().getX();
+				odo_y = odo.getPose().getY();
+				break;
+			default: throw new RuntimeException("Shouldn't Happen");}
+			float new_x = (float) ((((double)startingPoint.getX()) - 0.5)*Main.TILE_WIDTH + odo_x);
+			float new_y = (float) ((((double)startingPoint.getY()) - 0.5)*Main.TILE_WIDTH + odo_y);
+			float new_heading = (float) (odo.getPose().getHeading() - (90f * startingPoint.getDir().v) + 90f);
+			odo.setPose(new Pose(new_x, new_y, new_heading));}
+		return observations;	
+	}
+
+
+
+	/****
+	 * Check whether a position r is possible from position s
+	 * @param s The starting position to use as a 'base'
+	 * @param r Where the robot is relative to where it started (current observation)
+	 * @return True iff the position the position r is possible relative to position s
+	 */
+	private boolean valid(Position s, Position r){
+		// Get real direction to check based on Position checking and 
+		// where we are facing based on where we started
+		Direction realDir = s.getDir();
+		for (int i = 0; i < r.getDir().v; i++)
+			realDir = Position.rotateLeft(realDir);
+		
+		// Get position
+		int x = Position.relativeX(s, r);
+		int y = Position.relativeY(s, r);
+		
+		if (x < 0 || x > (Main.NUM_TILES - 1) || y < 0 || y > (Main.NUM_TILES - 1) || map[x][y]) return false;
+		
+		switch(realDir){
+		case UP:
+			if (r.isBlocked())
+				return (y == (Main.NUM_TILES - 1) || map[x][y+1]);
+			else
+				return (y < (Main.NUM_TILES - 1) && !map[x][y+1]);
+		case DOWN:
+			if (r.isBlocked())
+				return (y == 0 || map[x][y-1]);
+			else
+				return (y > 0 && !map[x][y-1]);
+		case LEFT:
+			if (r.isBlocked())
+				return (x == 0 || map[x-1][y]);
+			else
+				return (x > 0 && !map[x-1][y]);
+		case RIGHT:
+			if (r.isBlocked())
+				return (x == (Main.NUM_TILES - 1) || map[x+1][y]);
+			else
+				return (x < (Main.NUM_TILES - 1) && !map[x+1][y]);}
+		return true;
+	}
+	
 }

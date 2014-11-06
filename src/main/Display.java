@@ -3,7 +3,6 @@ package main;
 import lejos.nxt.LCD;
 import lejos.robotics.localization.PoseProvider;
 import lejos.robotics.navigation.Pose;
-import localization.FullPoseProvider;
 import localization.Localizer;
 
 /*****
@@ -38,8 +37,6 @@ public class Display extends Thread {
 				x = poseProvider.getPose().getX();
 				y = poseProvider.getPose().getY();
 				h = poseProvider.getPose().getHeading();
-				if (poseProvider instanceof FullPoseProvider)
-					posStr = ((FullPoseProvider)poseProvider).getPositionKnown() ? "" : " ?";
 			}
 			
 			LCD.drawString("X: " + Display.formattedDoubleToString(x, 2) + posStr, 0, 0);

@@ -6,6 +6,7 @@ import lejos.geom.Line;
 import lejos.geom.Rectangle;
 import lejos.nxt.Button;
 import lejos.nxt.ButtonListener;
+import lejos.nxt.ColorSensor;
 import lejos.nxt.Motor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
@@ -16,7 +17,6 @@ import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.mapping.LineMap;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
-import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
 import localization.Localizer;
 import localization.OdometryCorrection;
@@ -31,10 +31,10 @@ public class Main {
 		MOTOR_RIGHT = Motor.C;
 	
 	public static final UltrasonicSensor ULTRASONIC = new UltrasonicSensor(SensorPort.S2);
-	
+	public static final ColorSensor COLORSENSOR_LEFT = new ColorSensor(SensorPort.S1),
+									COLORSENSOR_RIGHT = new ColorSensor(SensorPort.S3);
 	private static DifferentialPilot pilot;
 	private static Navigator nav;
-	private static RangeScanner scanner;
 	private static MovementController moveController;
 	private static BlockRescuer blockRescuer;
 	private static OdometryPoseProvider odo;
@@ -44,9 +44,9 @@ public class Main {
 	
 	// TODO: Update wheel paramaters based on design
 	public static final float	 
-		LEFT_WHEEL_D = 4.28f,
-		RIGHT_WHEEL_D = 4.28f,
-		WHEEL_BASE = 17.75f,
+		LEFT_WHEEL_D = 4.2065f,
+		RIGHT_WHEEL_D = 4.2065f,
+		WHEEL_BASE = 17.65f,
 		TILE_WIDTH = 30.48f;
 	
 	// TODO: Set to 12 for real maps
@@ -72,20 +72,17 @@ public class Main {
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
 		
-		// Instantiate a new RangeScanner, for use in localization
-		scanner = new FixedRangeScanner(pilot, ULTRASONIC);
-		
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
 		
 		// Instantate a new OdometryCorrection and disable it
-		odoCorrection = new OdometryCorrection(odo);
+		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
 		odoCorrection.disable();
 		
 		display = new Display(odo);
 		
 		// Instantiate a new Localizer
-		localizer = new Localizer(pilot, scanner, odo);
+		localizer = new Localizer(pilot, ULTRASONIC, odo);
 		
 		// Instantiate a new Navigator to control movement
 		nav = new Navigator(pilot, odo);
@@ -114,7 +111,7 @@ public class Main {
 		
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		blockRescuer.dropBlock();
-		blockRescuer.resetArm();
+		blockRescuer.raiseArm();
 
 	}
 
@@ -126,6 +123,9 @@ public class Main {
 		return 0;
 	}
 	
+	public static boolean[][] getBoolMap(){
+		return maps[getMapNumber()];
+	}
 	/****
 	 * Get the LineMap for the Localizer
 	 * based on a given map. The number should be in the range
@@ -140,15 +140,15 @@ public class Main {
 				for (int x = 0; x < Main.NUM_TILES; x++){
 					for (int y = 0; y < Main.NUM_TILES; y++){
 						if (maps[mapNumber][x][y]){	// Check if this tile is blocked
-							float right_x = ((x + 0.5f) * Main.TILE_WIDTH);
-							float left_x = ((x - 0.5f) * Main.TILE_WIDTH);
-							float bottom_y = ((y -0.5f) * Main.TILE_WIDTH);
-							float top_y = ((y + 0.5f) * Main.TILE_WIDTH);
+							float left_x = ((x - 1) * Main.TILE_WIDTH);
+							float right_x = (x * Main.TILE_WIDTH);
+							float bottom_y = ((y - 1) * Main.TILE_WIDTH);
+							float top_y = (y * Main.TILE_WIDTH);
 							
-							Line bottom = new Line(left_x, right_x, bottom_y, bottom_y);
-							Line top = new Line(left_x, right_x, top_y, top_y);
-							Line left = new Line(left_x, left_x, bottom_y, top_y);
-							Line right = new Line(right_x, right_x, bottom_y, top_y);
+							Line bottom = new Line(left_x, bottom_y, right_x, bottom_y);
+							Line top = new Line(left_x, top_y, right_x, top_y);
+							Line left = new Line(left_x, bottom_y, left_x, top_y);
+							Line right = new Line(right_x, bottom_y, right_x, top_y);
 							
 							lines.add(bottom);
 							lines.add(top);
@@ -164,8 +164,8 @@ public class Main {
 				currentMap = new LineMap(
 						lineArray,
 						new Rectangle(
-								(float)(Main.TILE_WIDTH * -0.5), // top left x
-								(float)(Main.TILE_WIDTH * (Main.NUM_TILES - 0.5)), // top right y
+								(float)(Main.TILE_WIDTH * -1), // top left x
+								(float)(Main.TILE_WIDTH * (Main.NUM_TILES - 1)), // top left y
 								(float)(Main.TILE_WIDTH * Main.NUM_TILES), 	 // height
 								(float)(Main.TILE_WIDTH * Main.NUM_TILES))); // width
 			} else throw new RuntimeException("Invalid Map Number");

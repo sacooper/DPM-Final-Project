@@ -1,6 +1,5 @@
 package navigation;
 
-import lejos.nxt.LCD;
 import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Waypoint;
@@ -49,7 +48,6 @@ public class MovementController{
 			throw new RuntimeException("No path: (" + x + ", " + y + ", " + t + ")");
 		}
 		nav.followPath(p);
-		
-		while (nav.isMoving());
+		nav.waitForStop();
 	}
 }
