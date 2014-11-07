@@ -3,7 +3,11 @@ package navigation;
 import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Waypoint;
+import lejos.robotics.pathfinding.AstarSearchAlgorithm;
+import lejos.robotics.pathfinding.FourWayGridMesh;
+import lejos.robotics.pathfinding.NodePathFinder;
 import lejos.robotics.pathfinding.Path;
+import lejos.robotics.pathfinding.PathFinder;
 import lejos.robotics.pathfinding.ShortestPathFinder;
 import main.Display;
 import main.Main;
@@ -15,8 +19,9 @@ import main.Main;
  * @author Scott Cooper
  */
 public class MovementController{
+	private static final int GRIDSPACE = 25, CLEARANCE = 15;
 	private Navigator nav;	// Navigator to control movement
-	private ShortestPathFinder pathFinder;	// Path finder
+	private PathFinder pathFinder;	// Path finder
 	
 	/***
 	 * Create a new movement Controller
@@ -25,8 +30,14 @@ public class MovementController{
 	 */
 	public MovementController(Navigator nav){
 		this.nav = nav;
-		pathFinder = new ShortestPathFinder(Main.getMap());
-		pathFinder.lengthenLines(14f);
+		// Use a regular grid of node points. Grid space = 20. Clearance = 15:
+		FourWayGridMesh grid = new FourWayGridMesh(Main.getMap(), GRIDSPACE, CLEARANCE);
+		
+		// Use A* search:
+		AstarSearchAlgorithm alg = new AstarSearchAlgorithm();
+		
+		// Give the A* search alg and grid to the PathFinder:
+		pathFinder = new NodePathFinder(alg, grid);
 	}
 	
 	/***
