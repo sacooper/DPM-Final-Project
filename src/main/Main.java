@@ -11,12 +11,11 @@ import lejos.nxt.Motor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.UltrasonicSensor;
-import lejos.robotics.FixedRangeScanner;
-import lejos.robotics.RangeScanner;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.mapping.LineMap;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
+import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
 import localization.Localizer;
 import localization.OdometryCorrection;
@@ -62,6 +61,8 @@ public class Main {
 	// List of maps for use in competition
 	// usage: maps[map_number][x][y]
 	private static final boolean[][][] maps;
+
+	private static final int NUM_MAPS = 6;
 	
 	// Current LineMap. Map is used in both Localization and pathfinding in MovementController
 	private static LineMap currentMap = null;
@@ -74,10 +75,13 @@ public class Main {
 	
 	private Main(){};
 	
-	public static void main(String[] args) {
+	public static void main(String[] args){
+//
+
+		MOTOR_LEFT.setAcceleration(2000);
+		MOTOR_RIGHT.setAcceleration(2000);
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
 		
@@ -87,7 +91,7 @@ public class Main {
 		odoCorrection.start();
 		
 		display = new Display(odo);
-		
+		display.start();
 		// Instantiate a new Localizer
 		localizer = new Localizer(pilot, ULTRASONIC, odo);
 		
@@ -96,31 +100,66 @@ public class Main {
 		
 		// Instantiate a new MovementController for travelling to waypoints
 		moveController = new MovementController(nav);
+		
+		Button.waitForAnyPress();
+		
+		OdometryCorrection.enable();
 
-		// Instantiate a new blockRescuer
-		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, ARM);
+		odo.setPose(new Pose(-15, -20, 90));
 		
-		// moveController.travelToWaypoint(new Waypoint(75, 75, 0));
+		pilot.travel(Main.TILE_WIDTH, false);
 		
-		display.start();
-		
-		Display.setCurrentAction(Display.Action.LOCALIZING);
-		localizer.localize();
-		
-		Display.setCurrentAction(Display.Action.MOVING);
-		moveController.travelToWaypoint(pickup);
-		
-		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-		blockRescuer.rescueBlock();
-		
-		Display.setCurrentAction(Display.Action.MOVING);
-		moveController.travelToWaypoint(dropoff);
-		
-		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-		blockRescuer.dropBlock();
-		blockRescuer.raiseArm();
-
 	}
+	
+//	public static void main_primary(String[] args) {
+//		MOTOR_LEFT.setAcceleration(1000);
+//		MOTOR_RIGHT.setAcceleration(1000);
+//		// Instantiate a new DifferentialPilot to control movement
+//		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+//		
+//		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+//		odo = new OdometryPoseProvider(pilot);
+//		
+//		// Instantate a new OdometryCorrection and disable it
+//		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
+//		OdometryCorrection.disable();
+//		odoCorrection.start();
+//		
+//		display = new Display(odo);
+//		
+//		// Instantiate a new Localizer
+//		localizer = new Localizer(pilot, ULTRASONIC, odo);
+//		
+//		// Instantiate a new Navigator to control movement
+//		nav = new Navigator(pilot, odo);
+//		
+//		// Instantiate a new MovementController for travelling to waypoints
+//		moveController = new MovementController(nav);
+//
+//		// Instantiate a new blockRescuer
+//		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, ARM);
+//		
+//		// moveController.travelToWaypoint(new Waypoint(75, 75, 0));
+//		
+//		display.start();
+//		
+//		Display.setCurrentAction(Display.Action.LOCALIZING);
+//		localizer.localize();
+//		
+//		Display.setCurrentAction(Display.Action.MOVING);
+//		moveController.travelToWaypoint(pickup);
+//		
+//		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
+//		blockRescuer.rescueBlock();
+//		
+//		Display.setCurrentAction(Display.Action.MOVING);
+//		moveController.travelToWaypoint(dropoff);
+//		
+//		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
+//		blockRescuer.dropBlock();
+//		blockRescuer.raiseArm();
+//
+//	}
 
 	public static DifferentialPilot getPilot() {
 		return pilot;
@@ -153,14 +192,15 @@ public class Main {
 							float top_y = (y * Main.TILE_WIDTH);
 							
 							Line bottom = new Line(left_x, bottom_y, right_x, bottom_y);
-							Line top = new Line(left_x, top_y, right_x, top_y);
-							Line left = new Line(left_x, bottom_y, left_x, top_y);
+							Line top = new Line(right_x, top_y, left_x, top_y);
+							Line left = new Line(left_x, top_y, left_x, bottom_y);
 							Line right = new Line(right_x, bottom_y, right_x, top_y);
 							
 							lines.add(bottom);
-							lines.add(top);
-							lines.add(left);
 							lines.add(right);
+							lines.add(top); 
+							lines.add(left);
+							
 						}
 					}
 				}
@@ -172,7 +212,8 @@ public class Main {
 						lineArray,
 						new Rectangle(
 								(float)(Main.TILE_WIDTH * -1), // top left x
-								(float)(Main.TILE_WIDTH * (Main.NUM_TILES - 1)), // top left y
+//								(float)(Main.TILE_WIDTH * (Main.NUM_TILES - 1)), // top left y
+								(float)(Main.TILE_WIDTH * (- 1)), // top left y
 								(float)(Main.TILE_WIDTH * Main.NUM_TILES), 	 // height
 								(float)(Main.TILE_WIDTH * Main.NUM_TILES))); // width
 			} else throw new RuntimeException("Invalid Map Number");
@@ -192,7 +233,7 @@ public class Main {
 					@Override
 					public void buttonReleased(Button b) {}});
 		
-		maps = new boolean[6][Main.NUM_TILES][Main.NUM_TILES];
+		maps = new boolean[Main.NUM_MAPS][Main.NUM_TILES][Main.NUM_TILES];
 		
 		for (int i = 0; i < 6; i++){
 			for (int x = 0; x < Main.NUM_TILES; x++){

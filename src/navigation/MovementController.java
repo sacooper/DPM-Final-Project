@@ -1,13 +1,13 @@
 package navigation;
 
+import java.util.Iterator;
+
+import lejos.nxt.Button;
+import lejos.nxt.LCD;
 import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Waypoint;
-import lejos.robotics.pathfinding.AstarSearchAlgorithm;
-import lejos.robotics.pathfinding.FourWayGridMesh;
-import lejos.robotics.pathfinding.NodePathFinder;
 import lejos.robotics.pathfinding.Path;
-import lejos.robotics.pathfinding.PathFinder;
 import lejos.robotics.pathfinding.ShortestPathFinder;
 import main.Display;
 import main.Main;
@@ -19,9 +19,8 @@ import main.Main;
  * @author Scott Cooper
  */
 public class MovementController{
-	private static final int GRIDSPACE = 25, CLEARANCE = 15;
 	private Navigator nav;	// Navigator to control movement
-	private PathFinder pathFinder;	// Path finder
+	private ShortestPathFinder pathFinder;	// Path finder
 	
 	/***
 	 * Create a new movement Controller
@@ -30,22 +29,18 @@ public class MovementController{
 	 */
 	public MovementController(Navigator nav){
 		this.nav = nav;
-		// Use a regular grid of node points. Grid space = 20. Clearance = 15:
-		FourWayGridMesh grid = new FourWayGridMesh(Main.getMap(), GRIDSPACE, CLEARANCE);
-		
-		// Use A* search:
-		AstarSearchAlgorithm alg = new AstarSearchAlgorithm();
+
 		
 		// Give the A* search alg and grid to the PathFinder:
-		pathFinder = new NodePathFinder(alg, grid);
+		pathFinder = new ShortestPathFinder(Main.getMap());
+		LCD.clear();
+		pathFinder.lengthenLines(14f);
 	}
 	
 	/***
 	 * Find the shortest path to the Waypoint w and begin traveling to it
 	 * 
 	 * @param w The destination waypoint
-	 * @throws DestinationUnreachableException Thrown by PathFinder if there is
-	 * 			not a route to the waypoint 'w'
 	 */
 	public void travelToWaypoint(Waypoint w) {
 		nav.stop();
@@ -55,9 +50,18 @@ public class MovementController{
 			p = pathFinder.findRoute(nav.getPoseProvider().getPose(), w);
 		} catch (DestinationUnreachableException e) {
 			String x = Display.formattedDoubleToString(w.getX(), 1),
-				   y = Display.formattedDoubleToString(w.getX(), 1),
+				   y = Display.formattedDoubleToString(w.getY(), 1),
 				   t = Display.formattedDoubleToString(w.getHeading(), 1);
-			throw new RuntimeException("No path: (" + x + ", " + y + ", " + t + ")");
+//			String x = Display.formattedDoubleToString(nav.getPoseProvider().getPose().getX(), 1),
+//					   y = Display.formattedDoubleToString(nav.getPoseProvider().getPose().getY(), 1),
+//					   t = Display.formattedDoubleToString(nav.getPoseProvider().getPose().getHeading(), 1);
+			throw new RuntimeException(x + ", " + y + ", " + t);
+//			throw new RuntimeException("No path: (" + x + ", " + y + ", " + t + ")");
+		}
+		for (Iterator<Waypoint> i = p.iterator(); i.hasNext(); ){
+			Waypoint a = i.next();
+			Display.printLocation((float)a.getX(), (float)a.getY(), (float)a.getHeading());
+			Button.waitForAnyPress();
 		}
 		nav.followPath(p);
 		nav.waitForStop();

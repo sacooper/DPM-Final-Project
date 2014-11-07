@@ -1,6 +1,8 @@
 package localization;
 
 import lejos.nxt.ColorSensor;
+import lejos.nxt.Sound;
+import lejos.robotics.Color;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.Pose;
 import lejos.util.Delay;
@@ -24,9 +26,9 @@ import main.Main;
 public class OdometryCorrection extends Thread {
 	private static final byte CORRECTION_PERIOD = 10;
 	private static boolean enabled;
-	private final static double X_OFFSET = 7.3,
-								Y_OFFSET = 7.3,
-								LEFT_LIGHT_THRESHOLD = 0.85, 
+	private final static double X_OFFSET = 4.5, // 7.3
+								Y_OFFSET = 4.5, // 7.3
+								LEFT_LIGHT_THRESHOLD = 0.87, //.85
 								RIGHT_LIGHT_THRESHOLD = 0.87;
 
 	private OdometryPoseProvider odometer;
@@ -66,14 +68,14 @@ public class OdometryCorrection extends Thread {
 		final double leftOffset = Math.PI + Math.atan(Y_OFFSET/X_OFFSET);
 		final double rightOffset = Math.PI - Math.atan(Y_OFFSET/X_OFFSET);
 
-		leftCS.setFloodlight(true);
-		rightCS.setFloodlight(true);
+		leftCS.setFloodlight(Color.GREEN);
+		rightCS.setFloodlight(Color.GREEN);
 
 		//	Calculate the average value of getRawLightValue, this is the value of the ambient light.
 		for(int i = 0; i < 20; i++)
 		{
-			ambientLeft += leftCS.getRawLightValue();
-			ambientRight += rightCS.getRawLightValue();
+			ambientLeft += leftCS.getNormalizedLightValue();
+			ambientRight += rightCS.getNormalizedLightValue();
 			Delay.msDelay(10);	
 		}
 
@@ -91,10 +93,11 @@ public class OdometryCorrection extends Thread {
 			if(enabled){
 				//	If the light value read by the ColorSensor is below the ambient light
 				//	by a percentage, the ColorSensor has crossed a grid line.
-
 				Pose p = odometer.getPose();
 				
-				if (leftCS.getRawLightValue() < ambientLeft * LEFT_LIGHT_THRESHOLD) {
+				if (leftCS.getNormalizedLightValue() < ambientLeft * LEFT_LIGHT_THRESHOLD) {
+					Sound.beep();
+//					System.exit(0);
 					//	The temporary angle is the angle that the robot is currently at plus
 					//	the left offset angle.
 					tempAngle = (p.getHeading()-90)*Math.PI/180 + leftOffset;
@@ -118,7 +121,9 @@ public class OdometryCorrection extends Thread {
 				}
 				//	The following if statement is nearly identical to the one above. The right 
 				//	ColorSensor is polled instead of the left one.
-				if (rightCS.getRawLightValue() < ambientRight * RIGHT_LIGHT_THRESHOLD) {
+				if (rightCS.getNormalizedLightValue() < ambientRight * RIGHT_LIGHT_THRESHOLD) {
+					Sound.buzz();
+//					System.exit(1);
 					//	The rightOffset is used to calculate the tempAngle instead of the leftOffset.
 					tempAngle = (p.getHeading()-90)*Math.PI/180 + rightOffset;
 

@@ -130,4 +130,11 @@ public class Display extends Thread {
 		
 		return "("+ x + ", " + y + ", " + t + ")";
 	}
+	
+	public static void printLocation(float x, float y, float h){
+		LCD.clear();
+		LCD.drawString("X: " + Display.formattedDoubleToString(x, 2), 0, 0);
+		LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2), 0, 1);
+		LCD.drawString("H: " + Display.formattedDoubleToString(h, 2), 0, 2);
+	}
 }
