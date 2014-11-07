@@ -23,6 +23,12 @@ import localization.OdometryCorrection;
 import navigation.MovementController;
 import blocks.BlockRescuer;
 
+/*****
+ * Main class contianing all constants. Primary control of the robot occurs here.
+ * 
+ * @author Scott Cooper
+ *
+ */
 public class Main {
 
 	public static final NXTRegulatedMotor 
@@ -64,7 +70,7 @@ public class Main {
 
 	private static Waypoint dropoff = new Waypoint(0, 0, 45);
 	
-	public static final Object POSE_LOCK = new Object();
+//	public static final Object POSE_LOCK = odo;
 	
 	private Main(){};
 	
@@ -77,7 +83,8 @@ public class Main {
 		
 		// Instantate a new OdometryCorrection and disable it
 		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
-		odoCorrection.disable();
+		OdometryCorrection.disable();
+		odoCorrection.start();
 		
 		display = new Display(odo);
 		

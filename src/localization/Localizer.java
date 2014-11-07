@@ -9,6 +9,13 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Pose;
 import main.Main;
 
+/*******
+ * Localize using a known map. Once completed, the <code>OdometeryPoseProvider</code> passed in
+ * during instantiation will be corrected to a known point.
+ * 
+ * @author Scott Cooper
+ *
+ */
 public class Localizer {
 	private UltrasonicSensor us_scanner;
 	private DifferentialPilot pilot;	// Pilot controlling movement
@@ -63,9 +70,8 @@ public class Localizer {
 	 * 
 	 * @return The starting pose or null if not yet determined
 	 */
-	public static Pose getStartingPose() {
-		synchronized(Main.POSE_LOCK){
-			return startingPose;}}
+	public static synchronized Pose getStartingPose() {
+			return startingPose;}
 
 	/****
 	 * Set the starting pose. Note that this should only be used once during
@@ -73,9 +79,8 @@ public class Localizer {
 	 * 
 	 * @param startingPose The new starting pose
 	 */
-	public static void setStartingPose(Pose startingPose) {
-		synchronized(Main.POSE_LOCK){
-			Localizer.startingPose = startingPose;}}
+	public static synchronized void setStartingPose(Pose startingPose) {
+			Localizer.startingPose = startingPose;}
 	
 	private static ArrayList<Position> generatePossibleStates(boolean[][] map){
 		ArrayList<Position> possible = new ArrayList<Position>();
@@ -161,7 +166,7 @@ public class Localizer {
 		
 		Position startingPoint = possible.get(0);
 
-		synchronized(Main.POSE_LOCK){		// Update odometer based on known starting location
+		synchronized(odo){		// Update odometer based on known starting location
 			double odo_x, odo_y;
 			switch(startingPoint.getDir()){	// Need to get absolute change from starting point relative to where we are
 			case DOWN:

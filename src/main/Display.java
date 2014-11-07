@@ -6,6 +6,7 @@ import lejos.robotics.navigation.Pose;
 import localization.Localizer;
 
 /*****
+ * Display to print current heading of the robot. 
  * 
  * @author Scott Cooper
  *
@@ -33,11 +34,9 @@ public class Display extends Thread {
 		String posStr = "";
 		while(true){
 			LCD.clear();
-			synchronized(Main.POSE_LOCK){
-				x = poseProvider.getPose().getX();
-				y = poseProvider.getPose().getY();
-				h = poseProvider.getPose().getHeading();
-			}
+			x = poseProvider.getPose().getX();
+			y = poseProvider.getPose().getY();
+			h = poseProvider.getPose().getHeading();
 			
 			LCD.drawString("X: " + Display.formattedDoubleToString(x, 2) + posStr, 0, 0);
 			LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2) + posStr, 0, 1);
@@ -121,9 +120,8 @@ public class Display extends Thread {
 	
 	private static String startingPoseAsString(){
 		Pose current;
-		synchronized(Main.POSE_LOCK){
-			current = Localizer.getStartingPose();
-		}
+
+		current = Localizer.getStartingPose();
 		if (current == null) return "";
 		
 		String x = formattedDoubleToString(current.getX(), 2),

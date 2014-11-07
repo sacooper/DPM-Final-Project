@@ -4,6 +4,8 @@ package localization;
  * Enum representing the current direction
  * 
  * The value of the enum represents the number of left turns from up
+ * 
+ * @author Scott Coooper
  */
 public enum Direction {
 	UP(0), LEFT(1), RIGHT(3), DOWN(2);	// 4 possible directions

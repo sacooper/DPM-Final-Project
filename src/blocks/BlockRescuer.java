@@ -5,6 +5,12 @@ import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Waypoint;
 
+/*****
+ * Block rescuer class. All movement of the arm, and finding and 'rescuing' of block occurs here.
+ * 
+ * @author Scott Cooper
+ *
+ */
 public class BlockRescuer {
 	private static enum ArmState{LOWERED, RAISED, DROPPED}
 	

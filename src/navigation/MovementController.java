@@ -10,8 +10,9 @@ import main.Main;
 
 
 /**
+ * Movement controller that finds a path using a given map and travels there.
+ * 
  * @author Scott Cooper
- *
  */
 public class MovementController{
 	private Navigator nav;	// Navigator to control movement
@@ -25,7 +26,7 @@ public class MovementController{
 	public MovementController(Navigator nav){
 		this.nav = nav;
 		pathFinder = new ShortestPathFinder(Main.getMap());
-		pathFinder.lengthenLines(5);
+		pathFinder.lengthenLines(14f);
 	}
 	
 	/***

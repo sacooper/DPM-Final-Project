@@ -2,7 +2,7 @@ package localization;
 
 import lejos.nxt.ColorSensor;
 import lejos.robotics.localization.OdometryPoseProvider;
-import lejos.robotics.navigation.DifferentialPilot;
+import lejos.robotics.navigation.Pose;
 import lejos.util.Delay;
 import main.Main;
 
@@ -32,7 +32,6 @@ public class OdometryCorrection extends Thread {
 	private OdometryPoseProvider odometer;
 	private ColorSensor leftCS, rightCS;
 	
-	// constructor
 
 	/**
 	 * The constructor of the <code>OdometryCorrection</code> initializes instances of the class <code>OdometeryPoseProvider</code>.
@@ -48,7 +47,6 @@ public class OdometryCorrection extends Thread {
 		enabled = false;
 	}
 
-	// run method (required for Thread)
 
 	/** If the <code>boolean isTurning</code> from the <code>Navigation</code> is false,
 	 * check if either of the two <code>ColorSensors</code> crosses a grid line. If one does, 
@@ -93,49 +91,49 @@ public class OdometryCorrection extends Thread {
 			if(enabled){
 				//	If the light value read by the ColorSensor is below the ambient light
 				//	by a percentage, the ColorSensor has crossed a grid line.
+
+				Pose p = odometer.getPose();
+				
 				if (leftCS.getRawLightValue() < ambientLeft * LEFT_LIGHT_THRESHOLD) {
-					synchronized(Main.POSE_LOCK){
-						//	The temporary angle is the angle that the robot is currently at plus
-						//	the left offset angle.
-						tempAngle = (odometer.getPose().getHeading()-90)*Math.PI/180 + leftOffset;
-	
-						//	If the angle is over 2*PI, it is corrected.
-						if (tempAngle > 2*Math.PI)
-							tempAngle -= 2*Math.PI;
-	
-						//	The XError and YError are set as the difference between the closest grid 
-						//	line according to the odometer and the measured position of the grid line.
-						XError = Math.abs(getLine(odometer.getPose().getX() + hypotenuse * Math.cos(tempAngle)) - (odometer.getPose().getX() + hypotenuse * Math.cos(tempAngle)));
-						YError = Math.abs(getLine(odometer.getPose().getY() + hypotenuse * Math.sin(tempAngle)) - (odometer.getPose().getY() + hypotenuse * Math.sin(tempAngle)));
-	
-						//	The minimum between the X and Y error is found. If the X error is the 
-						//	smaller, the X position of the odometer is updated. If the Y is smaller,
-						//	the Y position of the odometer is updated.
-						if(Math.min(XError,  YError) == XError)				
-							odometer.getPose().setLocation((float) (getLine(odometer.getPose().getX() + hypotenuse * Math.cos(tempAngle)) - hypotenuse * Math.cos(tempAngle)), odometer.getPose().getY());					
-						else
-							odometer.getPose().setLocation(odometer.getPose().getX(), (float) (getLine(odometer.getPose().getY() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)));					
-					}
+					//	The temporary angle is the angle that the robot is currently at plus
+					//	the left offset angle.
+					tempAngle = (p.getHeading()-90)*Math.PI/180 + leftOffset;
+
+					//	If the angle is over 2*PI, it is corrected.
+					if (tempAngle > 2*Math.PI)
+						tempAngle -= 2*Math.PI;
+
+					//	The XError and YError are set as the difference between the closest grid 
+					//	line according to the odometer and the measured position of the grid line.
+					XError = Math.abs(getLine(p.getX() + hypotenuse * Math.cos(tempAngle)) - (p.getX() + hypotenuse * Math.cos(tempAngle)));
+					YError = Math.abs(getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - (p.getY() + hypotenuse * Math.sin(tempAngle)));
+
+					//	The minimum between the X and Y error is found. If the X error is the 
+					//	smaller, the X position of the odometer is updated. If the Y is smaller,
+					//	the Y position of the odometer is updated.
+					if(Math.min(XError,  YError) == XError)		
+						odometer.setPose(new Pose((float) (getLine(p.getX() + hypotenuse * Math.cos(tempAngle)) - hypotenuse * Math.cos(tempAngle)), p.getY(), p.getHeading()));			
+					else
+						odometer.setPose(new Pose(p.getX(), (float) (getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)), p.getHeading()));					
 				}
 				//	The following if statement is nearly identical to the one above. The right 
 				//	ColorSensor is polled instead of the left one.
 				if (rightCS.getRawLightValue() < ambientRight * RIGHT_LIGHT_THRESHOLD) {
-					synchronized(Main.POSE_LOCK){
-						//	The rightOffset is used to calculate the tempAngle instead of the leftOffset.
-						tempAngle = (odometer.getPose().getHeading()-90)*Math.PI/180 + rightOffset;
-	
-						if (tempAngle > 2*Math.PI)
-							tempAngle -= 2*Math.PI;
-	
-						XError = Math.abs(getLine(odometer.getPose().getX() + hypotenuse * Math.cos(tempAngle)) - (odometer.getPose().getX() + hypotenuse * Math.cos(tempAngle)));
-						YError = Math.abs(getLine(odometer.getPose().getY() + hypotenuse * Math.sin(tempAngle)) - (odometer.getPose().getY() + hypotenuse * Math.sin(tempAngle)));
-	
-						if(Math.min(XError,  YError) == XError)				
-							odometer.getPose().setLocation((float) (getLine(odometer.getPose().getX() + hypotenuse * Math.cos(tempAngle)) - hypotenuse * Math.cos(tempAngle)), odometer.getPose().getY());					
-						else
-							odometer.getPose().setLocation(odometer.getPose().getX(), (float) (getLine(odometer.getPose().getY() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)));					
+					//	The rightOffset is used to calculate the tempAngle instead of the leftOffset.
+					tempAngle = (p.getHeading()-90)*Math.PI/180 + rightOffset;
 
-					}
+					if (tempAngle > 2*Math.PI)
+						tempAngle -= 2*Math.PI;
+
+					XError = Math.abs(getLine(p.getX() + hypotenuse * Math.cos(tempAngle)) - (p.getX() + hypotenuse * Math.cos(tempAngle)));
+					YError = Math.abs(getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - (p.getY() + hypotenuse * Math.sin(tempAngle)));
+
+					if(Math.min(XError,  YError) == XError)				
+						odometer.setPose(new Pose((float) (getLine(p.getX() + hypotenuse * Math.cos(tempAngle)) - hypotenuse * Math.cos(tempAngle)), p.getY(), p.getHeading()));					
+					else
+						odometer.setPose(new Pose(p.getX(), (float) (getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)), p.getHeading()));					
+
+					
 				}
 
 			}
@@ -148,17 +146,20 @@ public class OdometryCorrection extends Thread {
 			}
 		}
 	}
-
-
-
-
-
+	
 	// depending on the heading of the robot find the closest grid line it just crossed.
 	private static double getLine(double coordinate) {
 		return Math.round(coordinate / Main.TILE_WIDTH) * Main.TILE_WIDTH;
 	}
 
+	/****
+	 * Enable OdometryCorrection globally
+	 */
 	public static void enable(){enabled = true;}
+	
+	/****
+	 * Disable OdometeryCorrection globally
+	 */
 	public static void disable(){enabled = false;}
 
 
