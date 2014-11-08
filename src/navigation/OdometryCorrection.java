@@ -1,4 +1,4 @@
-package localization;
+package navigation;
 
 import lejos.nxt.ColorSensor;
 import lejos.nxt.Sound;

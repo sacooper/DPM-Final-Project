@@ -18,8 +18,8 @@ import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
 import localization.Localizer;
-import localization.OdometryCorrection;
 import navigation.MovementController;
+import navigation.OdometryCorrection;
 import blocks.BlockRescuer;
 
 /*****
