@@ -77,7 +77,7 @@ public class OdometryCorrection extends Thread {
 			
 			correctionStart = System.currentTimeMillis();
 			int newColorLeft = leftCS.getNormalizedLightValue(), 
-					newColorRight = rightCS.getNormalizedLightValue();
+				newColorRight = rightCS.getNormalizedLightValue();
 			
 			if (lastColorLeft == -1) lastColorLeft = newColorLeft;
 			if (lastColorRight == -1) lastColorRight = newColorRight;
@@ -88,7 +88,7 @@ public class OdometryCorrection extends Thread {
 				//	by a percentage, the ColorSensor has crossed a grid line.
 				Pose p = odometer.getPose();
 				
-				if (lastColorLeft - newColorLeft < THRESHOLD) {
+				if (lastColorLeft - newColorLeft > THRESHOLD) {
 					Sound.beep();
 //					System.exit(0);
 					//	The temporary angle is the angle that the robot is currently at plus
@@ -114,8 +114,8 @@ public class OdometryCorrection extends Thread {
 				}
 				//	The following if statement is nearly identical to the one above. The right 
 				//	ColorSensor is polled instead of the left one.
-				if (lastColorLeft - newColorLeft < THRESHOLD) {
-					Sound.buzz();
+				if (lastColorRight - newColorRight > THRESHOLD) {
+					Sound.beep();
 //					System.exit(1);
 					//	The rightOffset is used to calculate the tempAngle instead of the leftOffset.
 					tempAngle = (p.getHeading()-90)*Math.PI/180 + rightOffset;
