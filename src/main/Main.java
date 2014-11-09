@@ -15,11 +15,11 @@ import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.mapping.LineMap;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
-import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
 import localization.Localizer;
 import navigation.MovementController;
 import navigation.OdometryCorrection;
+import blocks.Arm;
 import blocks.BlockRescuer;
 
 /*****
@@ -46,6 +46,7 @@ public class Main {
 	private static Localizer localizer;
 	private static Display display;
 	private static OdometryCorrection odoCorrection;
+	private static Arm arm;
 	
 	// TODO: Update wheel paramaters based on design
 	public static final float	 
@@ -75,48 +76,13 @@ public class Main {
 	
 	private Main(){};
 	
-	public static void main(String[] args){
+//	public static void main(String[] args){
+////
 //
-
-		MOTOR_LEFT.setAcceleration(2000);
-		MOTOR_RIGHT.setAcceleration(2000);
-		// Instantiate a new DifferentialPilot to control movement
-		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		// Instantiate a new OdometryPoseProvider, of maintaining current pose
-		odo = new OdometryPoseProvider(pilot);
-		
-		// Instantate a new OdometryCorrection and disable it
-		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
-		OdometryCorrection.disable();
-		odoCorrection.start();
-		
-		display = new Display(odo);
-		display.start();
-		// Instantiate a new Localizer
-		localizer = new Localizer(pilot, ULTRASONIC, odo);
-		
-		// Instantiate a new Navigator to control movement
-		nav = new Navigator(pilot, odo);
-		
-		// Instantiate a new MovementController for travelling to waypoints
-		moveController = new MovementController(nav);
-		
-		Button.waitForAnyPress();
-		
-		OdometryCorrection.enable();
-
-		odo.setPose(new Pose(-15, -20, 90));
-		
-		pilot.travel(Main.TILE_WIDTH, false);
-		
-	}
-	
-//	public static void main_primary(String[] args) {
-//		MOTOR_LEFT.setAcceleration(1000);
-//		MOTOR_RIGHT.setAcceleration(1000);
+//		MOTOR_LEFT.setAcceleration(2000);
+//		MOTOR_RIGHT.setAcceleration(2000);
 //		// Instantiate a new DifferentialPilot to control movement
 //		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-//		
 //		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 //		odo = new OdometryPoseProvider(pilot);
 //		
@@ -126,7 +92,7 @@ public class Main {
 //		odoCorrection.start();
 //		
 //		display = new Display(odo);
-//		
+//		display.start();
 //		// Instantiate a new Localizer
 //		localizer = new Localizer(pilot, ULTRASONIC, odo);
 //		
@@ -135,31 +101,69 @@ public class Main {
 //		
 //		// Instantiate a new MovementController for travelling to waypoints
 //		moveController = new MovementController(nav);
+//		
+//		Button.waitForAnyPress();
+//		
+//		OdometryCorrection.enable();
 //
-//		// Instantiate a new blockRescuer
-//		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, ARM);
+//		odo.setPose(new Pose(-15, -20, 90));
 //		
-//		// moveController.travelToWaypoint(new Waypoint(75, 75, 0));
+//		pilot.travel(Main.TILE_WIDTH, false);
 //		
-//		display.start();
-//		
-//		Display.setCurrentAction(Display.Action.LOCALIZING);
-//		localizer.localize();
-//		
-//		Display.setCurrentAction(Display.Action.MOVING);
-//		moveController.travelToWaypoint(pickup);
-//		
-//		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-//		blockRescuer.rescueBlock();
-//		
-//		Display.setCurrentAction(Display.Action.MOVING);
-//		moveController.travelToWaypoint(dropoff);
-//		
-//		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-//		blockRescuer.dropBlock();
-//		blockRescuer.raiseArm();
-//
 //	}
+	
+	public static void main(String[] args) {
+		MOTOR_LEFT.setAcceleration(1000);
+		MOTOR_RIGHT.setAcceleration(1000);
+		// Instantiate a new DifferentialPilot to control movement
+		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+		
+		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+		odo = new OdometryPoseProvider(pilot);
+		
+		// Instantate a new OdometryCorrection and disable it
+		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
+		OdometryCorrection.disable();
+		odoCorrection.start();
+		
+		display = new Display(odo);
+		
+		// Instantiate a new Localizer
+		localizer = new Localizer(pilot, ULTRASONIC, odo);
+		
+		// Instantiate a new Navigator to control movement
+		nav = new Navigator(pilot, odo);
+		
+		// Instantiate a new MovementController for travelling to waypoints
+		moveController = new MovementController(nav);
+
+		// Instantiate a new Arm for controlling claw movement
+		arm = new Arm(ARM, Arm.ArmState.RAISED);
+		
+		// Instantiate a new blockRescuer
+		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
+		
+		// moveController.travelToWaypoint(new Waypoint(75, 75, 0));
+		
+		display.start();
+		
+		Display.setCurrentAction(Display.Action.LOCALIZING);
+		localizer.localize();
+		
+		Display.setCurrentAction(Display.Action.MOVING);
+		moveController.travelToWaypoint(pickup);
+		
+		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
+		blockRescuer.rescueBlock();
+		
+		Display.setCurrentAction(Display.Action.MOVING);
+		moveController.travelToWaypoint(dropoff);
+		
+		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
+		arm.dropBlock();
+		arm.raiseArm();
+
+	}
 
 	public static DifferentialPilot getPilot() {
 		return pilot;

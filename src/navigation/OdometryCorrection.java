@@ -5,7 +5,6 @@ import lejos.nxt.Sound;
 import lejos.robotics.Color;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.Pose;
-import lejos.util.Delay;
 import main.Main;
 
 /**
@@ -150,7 +149,11 @@ public class OdometryCorrection extends Thread {
 		}
 	}
 	
-	// depending on the heading of the robot find the closest grid line it just crossed.
+	/****
+	 * Find the closest gridline to a coordinate
+	 * @param coordinate coordinate to find gridline closest too
+	 * @return the coordinate of the closest gridline
+	 */
 	private static double getLine(double coordinate) {
 		return Math.round(coordinate / Main.TILE_WIDTH) * Main.TILE_WIDTH;
 	}

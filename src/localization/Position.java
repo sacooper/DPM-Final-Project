@@ -10,7 +10,7 @@ package localization;
 public class Position {
 	private int x, y;			// X and Y coordinates
 	private Direction dir; 		// UP = North, DOWN = South, etc.
-	private boolean isBlocked;	// Whether we are blocked
+	private int tilesInFront;	// Whether we are blocked
 
 	/****
 	 * Create a new absolute position with the following paramaters
@@ -18,13 +18,13 @@ public class Position {
 	 * @param x	X coordinate relative to origin
 	 * @param y	Y coordinate relative to origin
 	 * @param dir Direction relative to positive Y
-	 * @param isBlocked	Whether this direction is blocked
+	 * @param tilesInFront Number of tiles in from of this position that are open
 	 */
-	public Position(int x, int y, Direction dir, boolean isBlocked) {
+	public Position(int x, int y, Direction dir, int tilesInFront) {
 		this.x = x;
 		this.y = y;
 		this.dir = dir;
-		this.isBlocked = isBlocked;}
+		this.tilesInFront = tilesInFront;}
 
 	/***
 	 * Get the X coordinate of this position
@@ -48,11 +48,11 @@ public class Position {
 		return dir;}
 
 	/****
-	 * Get whether this position is blocked in the specified direction
-	 * @return If this position is blocked in the specified direction
+	 * Get the number of tiles free in front of this tile. A value of 0 implies there is a tile directly in front.
+	 * @return The number of open tiles in front of this position.
 	 */
-	public boolean isBlocked() {
-		return isBlocked;}
+	public int tilesInFront() {
+		return tilesInFront;}
 	
 	/****
 	 * Rotate a direction 1 left

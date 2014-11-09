@@ -44,15 +44,13 @@ public class Localizer {
 		// STEP 1: GET TO CARDINAL DIRECTION
 		double oldRotateSpeed = pilot.getRotateSpeed();
 		pilot.setRotateSpeed(90);
-		pilot.rotate(360, true);
 		double distance = getFilteredData();
-		int missedWall = 0;
 		boolean saw_wall = false;
-		while (distance <= (Main.TILE_WIDTH - 5) || missedWall < 1 || !saw_wall) {
+		pilot.rotate(360, true);
+		while ((distance <= (Main.TILE_WIDTH - 5) || !saw_wall) && pilot.isMoving()) {
 			distance = getFilteredData();
-			if (distance > (Main.TILE_WIDTH -5))
-				++missedWall;
-			else saw_wall = true;
+			if (distance <= (Main.TILE_WIDTH -5))
+				saw_wall = true;
 		}
 		pilot.stop();
 		pilot.setRotateSpeed(oldRotateSpeed);
@@ -62,7 +60,7 @@ public class Localizer {
 		pilot.travel(Main.TILE_WIDTH);
 		
 		// Orient ourselves
-		orient(generatePossibleStates(map));
+		orient(generatePossibleStates());
 	}
 
 	/***
@@ -82,16 +80,38 @@ public class Localizer {
 	public static synchronized void setStartingPose(Pose startingPose) {
 			Localizer.startingPose = startingPose;}
 	
-	private static ArrayList<Position> generatePossibleStates(boolean[][] map){
+	private int tilesFree(Direction d, int x, int y){
+		int i = 0;
+		switch(d){
+		case UP:
+			while ((y+i+1) < Main.NUM_TILES && !map[x][i+y+1])
+				i++;
+			break;
+		case DOWN:
+			while ((y-i-1) >= 0 && !map[x][i+y+1])
+				i++;
+			break;
+		case RIGHT:
+			while((x+i+1) < Main.NUM_TILES && !map[x + i + 1][y])
+				i++;
+			break;
+		case LEFT:
+			while((x-i-1) >= 0 && !map[x - i - 1][y])
+				i++;
+		}
+		return Math.min(4, i);
+		
+	}
+	private ArrayList<Position> generatePossibleStates(){
 		ArrayList<Position> possible = new ArrayList<Position>();
 		// Initialize possible states based on map
 		for (int x = 0; x < Main.NUM_TILES; x++){
 			for(int y = 0; y < Main.NUM_TILES; y++){
 				if (!map[x][y]){
-					possible.add(new Position(x, y, Direction.UP, y == (Main.NUM_TILES - 1) || map[x][y+1]));
-					possible.add(new Position(x, y, Direction.DOWN, y == 0 || map[x][y-1]));
-					possible.add(new Position(x, y, Direction.RIGHT, x == (Main.NUM_TILES - 1) || map[x+1][y]));
-					possible.add(new Position(x, y, Direction.LEFT, x == 0 || map[x-1][y]));}
+					possible.add(new Position(x, y, Direction.UP, tilesFree(Direction.UP, x, y)));
+					possible.add(new Position(x, y, Direction.DOWN, tilesFree(Direction.DOWN, x, y)));
+					possible.add(new Position(x, y, Direction.RIGHT, tilesFree(Direction.RIGHT, x, y)));
+					possible.add(new Position(x, y, Direction.LEFT, tilesFree(Direction.LEFT, x, y)));}
 			}
 		}
 		return possible;
@@ -111,14 +131,14 @@ public class Localizer {
 		us_scanner.ping();
 		// wait for the ping to complete
 		try {
-			Thread.sleep(50);
+			Thread.sleep(25);
 		} catch (InterruptedException e) {
 		}
 
 		// there will be a delay here
 		dist = us_scanner.getDistance();
-		if (dist > 120)
-			dist = 120;
+		if (dist > 135)
+			dist = 135;
 		return dist;
 	}
 	
@@ -135,29 +155,31 @@ public class Localizer {
 		int x = 0, y = 0, observations = 0;	
 		
 		while (possible.size() > 1) { // Narrow down list of states until we know where we started
-			boolean blocked = getFilteredData() < Main.TILE_WIDTH;
+			int tiles_blocked = getFilteredData() / (int)Main.TILE_WIDTH;
 			observations++;
 
 			// Filter out now invalid orientations
 			Iterator<Position> iter = possible.iterator();
+			Position me = new Position(x, y, current, tiles_blocked);
 			while (iter.hasNext()){
 				Position s = iter.next();
-				if (!valid(s, new Position(x, y, current, blocked))){
+				if (!valid(s, me)){
 					iter.remove();}}
 			
 			if (possible.size() == 1) break;
 			
-				if (blocked) {
-					pilot.rotate(-90);
-					current = Position.rotateLeft(current);
-				} else {
-					pilot.travel(Main.TILE_WIDTH);
-					switch(current){
-					case DOWN: y--; break;
-					case LEFT: x--; break;
-					case RIGHT: x++; break;
-					case UP: y++; break;
-					default: throw new RuntimeException("Shouldn't Happen");}}
+			// TODO: Improved decision making
+			if (tiles_blocked == 0) {	
+				pilot.rotate(-90);
+				current = Position.rotateLeft(current);
+			} else {
+				pilot.travel(Main.TILE_WIDTH);
+				switch(current){
+				case DOWN: y--; break;
+				case LEFT: x--; break;
+				case RIGHT: x++; break;
+				case UP: y++; break;
+				default: throw new RuntimeException("Shouldn't Happen");}}
 			
 		}
 
@@ -188,7 +210,7 @@ public class Localizer {
 			default: throw new RuntimeException("Shouldn't Happen");}
 			float new_x = (float) ((((double)startingPoint.getX()) - 0.5)*Main.TILE_WIDTH + odo_x);
 			float new_y = (float) ((((double)startingPoint.getY()) - 0.5)*Main.TILE_WIDTH + odo_y);
-			float new_heading = (float) (odo.getPose().getHeading() - (90f * startingPoint.getDir().v) + 90f);
+			float new_heading = (float) (odo.getPose().getHeading() + (90f * startingPoint.getDir().v));
 			odo.setPose(new Pose(new_x, new_y, new_heading));}
 		return observations;	
 	}
@@ -214,28 +236,30 @@ public class Localizer {
 		
 		if (x < 0 || x > (Main.NUM_TILES - 1) || y < 0 || y > (Main.NUM_TILES - 1) || map[x][y]) return false;
 		
-		switch(realDir){
-		case UP:
-			if (r.isBlocked())
-				return (y == (Main.NUM_TILES - 1) || map[x][y+1]);
-			else
-				return (y < (Main.NUM_TILES - 1) && !map[x][y+1]);
-		case DOWN:
-			if (r.isBlocked())
-				return (y == 0 || map[x][y-1]);
-			else
-				return (y > 0 && !map[x][y-1]);
-		case LEFT:
-			if (r.isBlocked())
-				return (x == 0 || map[x-1][y]);
-			else
-				return (x > 0 && !map[x-1][y]);
-		case RIGHT:
-			if (r.isBlocked())
-				return (x == (Main.NUM_TILES - 1) || map[x+1][y]);
-			else
-				return (x < (Main.NUM_TILES - 1) && !map[x+1][y]);}
-		return true;
+		return r.tilesInFront() == tilesFree(realDir, x, y);
+		
+//		switch(realDir){
+//		case UP:
+//			if (r.isBlocked())
+//				return (y == (Main.NUM_TILES - 1) || map[x][y+1]);
+//			else
+//				return (y < (Main.NUM_TILES - 1) && !map[x][y+1]);
+//		case DOWN:
+//			if (r.isBlocked())
+//				return (y == 0 || map[x][y-1]);
+//			else
+//				return (y > 0 && !map[x][y-1]);
+//		case LEFT:
+//			if (r.isBlocked())
+//				return (x == 0 || map[x-1][y]);
+//			else
+//				return (x > 0 && !map[x-1][y]);
+//		case RIGHT:
+//			if (r.isBlocked())
+//				return (x == (Main.NUM_TILES - 1) || map[x+1][y]);
+//			else
+//				return (x < (Main.NUM_TILES - 1) && !map[x+1][y]);}
+//		return true;
 	}
 	
 }

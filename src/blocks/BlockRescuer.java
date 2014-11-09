@@ -11,21 +11,28 @@ import lejos.robotics.navigation.Waypoint;
  * @author Scott Cooper
  *
  */
-public class BlockRescuer {
-	private static enum ArmState{LOWERED, RAISED, DROPPED}
-	
+public class BlockRescuer {	
 	private DifferentialPilot pilot;
 	private UltrasonicSensor us;
-	private final NXTRegulatedMotor arm;
-	private ArmState armState;
+	private Arm arm;
 	
-	public BlockRescuer(DifferentialPilot pilot, UltrasonicSensor us, NXTRegulatedMotor arm){
+	/*****
+	 * Instantiate a new BlockRescuer with the following paramaters
+	 * 
+	 * @param pilot The <code>DifferentialPilot</code> controlling movement
+	 * @param us The <code>UltrasonicSensor</code> to use for detecting a block
+	 * @param arm The <code>Arm</code> that controls the claw
+	 */
+	public BlockRescuer(DifferentialPilot pilot, UltrasonicSensor us, Arm arm){
 		this.pilot = pilot;
 		this.us = us;
 		this.arm = arm;
-		this.armState = ArmState.RAISED;
 	}
 	
+	/***
+	 * Rescue a block. It is assumed that the robot is currently
+	 * at the waypoint specified for the dropoff zone.
+	 */
 	public void rescueBlock(){
 		// Stage 1: Find block
 		Waypoint blockDest = searchForBlock();
@@ -35,54 +42,18 @@ public class BlockRescuer {
 		// Stage 2: Move to block and position ourselves to pick it up
 		
 		// Stage 3: Pick up block
-		this.lowerArm();
+		arm.lowerArm();
 		pilot.travel(10);
-		this.raiseArm();
+		arm.raiseArm();
 	}
 	
+	/***
+	 * Search for a block, and return the waypoint of the
+	 * block as seen by the robot.
+	 * @return A Waypiont representing the block.
+	 */
 	private Waypoint searchForBlock(){
 		return new Waypoint(0, 0);
 	}
-	
-	public boolean dropBlock(){
-		// TODO: Check constants for dropBlock()
-		switch(this.armState){
-		case RAISED:
-			arm.rotate(-220);
-			this.armState = ArmState.DROPPED;
-			return true;
-		default:
-			return false;
-		}
-	}
-	
-	public void raiseArm(){
-		// TODO: Check constants for raiseArm()
-		switch(this.armState){
-		case RAISED:
-			return;
-		case DROPPED:
-			arm.rotate(-260);
-			break;
-		case LOWERED:
-			arm.rotate(-400);
-			break;
-		}
-		this.armState = ArmState.RAISED;
-	}
-	
-	public void lowerArm(){
-		// TODO: Check constants for lowerArm()
-		switch(this.armState){
-		case RAISED:
-			arm.rotate(400);
-			break;
-		case DROPPED:
-			arm.rotate(260);
-			break;
-		case LOWERED:
-			return;
-		}
-		this.armState = ArmState.RAISED;
-	}
+
 }

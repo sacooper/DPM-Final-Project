@@ -24,6 +24,12 @@ public enum Direction {
 	public final int v;					// # of left turns from up
 	private Direction(int i){ v = i; }	// Direction constructor
 	
+	/****
+	 * Return the value of this Direction as a cardinal direction (i.e. N, S, E, W)
+	 * 
+	 * UP=N<br>DOWN=S<br>LEFT=W<br>RIGHT=E<br>
+	 * @return A string represnting this direction as a cardinal directoin
+	 */
 	public String asCardinal(){
 		switch(this){
 		case DOWN: 	return "S";
@@ -35,6 +41,11 @@ public enum Direction {
 	}
 	
 	@Override
+	/*****
+	 * Get the value of this direction as a single character U, D, L, R
+	 * 
+	 * @return A string represnting this direction
+	 */
 	public String toString(){
 		switch(this){
 		case DOWN: 	return "D";
