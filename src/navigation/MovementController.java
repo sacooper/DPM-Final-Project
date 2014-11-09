@@ -97,7 +97,7 @@ public class MovementController{
 			
 			for (int x = 0; x < map.length; x++){
 				for (int y = 0; y < map[x].length; y++){
-					if (map[x][y]){
+					if (!map[x][y]){
 						addNode(new Node(x, y), 5);
 					}
 						
@@ -145,31 +145,19 @@ public class MovementController{
 			String x = Display.formattedDoubleToString(w.getX(), 1),
 				   y = Display.formattedDoubleToString(w.getY(), 1),
 				   t = Display.formattedDoubleToString(w.getHeading(), 1);
-//			String x = Display.formattedDoubleToString(nav.getPoseProvider().getPose().getX(), 1),
-//					   y = Display.formattedDoubleToString(nav.getPoseProvider().getPose().getY(), 1),
-//					   t = Display.formattedDoubleToString(nav.getPoseProvider().getPose().getHeading(), 1);
 			throw new RuntimeException(x + ", " + y + ", " + t);
-//			throw new RuntimeException("No path: (" + x + ", " + y + ", " + t + ")");
 		}
-		for (Iterator<Waypoint> i = p.iterator(); i.hasNext(); ){
-			Waypoint a = i.next();
-			Display.printLocation((float)a.getX(), (float)a.getY(), (float)a.getHeading());
-			Button.waitForAnyPress();
-		}
+
 		for (Waypoint way : p){
 			way.x = way.x * Main.TILE_WIDTH - Main.TILE_WIDTH/2f;
 			way.y = way.y * Main.TILE_WIDTH - Main.TILE_WIDTH/2f;
 		}
-		for (Iterator<Waypoint> i = p.iterator(); i.hasNext(); ){
-			Waypoint a = i.next();
-			Display.printLocation((float)a.getX(), (float)a.getY(), (float)a.getHeading());
-			Button.waitForAnyPress();
-		}
-		LCD.clear();
-		LCD.drawString("Press again to go", 0, 0);
-		Button.waitForAnyPress();
+		nav.singleStep(false);
 		nav.followPath(p);
-		nav.addWaypoint(w);
+		nav.waitForStop();
+		nav.goTo(w);
+		nav.waitForStop();
+		nav.rotateTo(w.getHeading());
 		nav.waitForStop();
 	}
 }
