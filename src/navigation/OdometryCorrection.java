@@ -2,10 +2,12 @@ package navigation;
 
 import lejos.geom.Point;
 import lejos.nxt.ColorSensor;
+import lejos.nxt.LCD;
 import lejos.nxt.Sound;
 import lejos.robotics.Color;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.Pose;
+import main.Display;
 import main.Main;
 
 /**
@@ -28,7 +30,8 @@ public class OdometryCorrection extends Thread {
 	private static boolean enabled;
 	private final static double X_OFFSET = 4.5, // 7.3
 								Y_OFFSET = 4.5, // 7.3
-								THRESHOLD = 11;
+								THRESHOLD_LEFT = 11,
+								THRESHOLD_RIGHT = 9;
 
 	private OdometryPoseProvider odometer;
 	private ColorSensor leftCS, rightCS;
@@ -70,7 +73,7 @@ public class OdometryCorrection extends Thread {
 		rightCS.setFloodlight(Color.GREEN);
 		
 		int lastColorLeft = -1, lastColorRight = -1;
-		Pose lastPose;
+		Pose lastPose = null;
 		boolean sawLeft = false, sawRight = false;
 		
 		//	This while loop is used to check if either of the ColorSensors crosses a grid line.
@@ -91,9 +94,13 @@ public class OdometryCorrection extends Thread {
 				//	by a percentage, the ColorSensor has crossed a grid line.
 				Pose p = odometer.getPose();
 				
-				if (lastColorLeft - newColorLeft > THRESHOLD) {
-					if (!sawLeft) sawLeft = true;
-					else lastPose = p;
+				if (lastColorLeft - newColorLeft > THRESHOLD_LEFT) {
+					if (!sawLeft && sawRight){
+						sawLeft = true;
+					} else if (!sawLeft && !sawRight){
+						sawLeft = true;
+						lastPose = p;
+					}
 			
 					Sound.beep();
 //					System.exit(0);
@@ -120,9 +127,13 @@ public class OdometryCorrection extends Thread {
 				}
 				//	The following if statement is nearly identical to the one above. The right 
 				//	ColorSensor is polled instead of the left one.
-				if (lastColorRight - newColorRight > THRESHOLD) {
-					if (!sawRight) sawRight = true;
-					else lastPose = p;
+				if (lastColorRight - newColorRight > THRESHOLD_RIGHT) {
+					if (!sawRight && sawLeft){
+						sawRight = true;
+					} else if (!sawRight && !sawLeft){
+						sawRight = true;
+						lastPose = p;
+					}
 					
 					Sound.beep();
 //					System.exit(1);
@@ -145,7 +156,9 @@ public class OdometryCorrection extends Thread {
 				
 				if (sawRight && sawLeft){
 					sawLeft = sawRight = false;
-					odometer.setPose(new Pose(p.getX(), p.getY(), p.getHeading() - p.angleTo(new Point(p.getX(), p.getY()))));
+					odometer.setPose(new Pose(p.getX(), p.getY(), p.getHeading() + lastPose.angleTo(new Point(p.getX(), p.getY()))));
+					Display.disableClear();
+					LCD.drawString(lastPose.angleTo(new Point(p.getX(), p.getY()))+ "", 0, 6);
 				}
 
 			}

@@ -13,6 +13,7 @@ import localization.Localizer;
  */
 public class Display extends Thread {
 	public static enum Action { LOCALIZING, MOVING, BLOCK_ACTION }
+	private static boolean clear;
 	
 	private static final int DELAY = 1000;
 	private static Action currentAction = null;
@@ -25,6 +26,7 @@ public class Display extends Thread {
 	 */
 	public Display(PoseProvider poseProvider){
 		this.poseProvider = poseProvider;
+		clear = true;
 	}
 	
 	@Override
@@ -33,7 +35,7 @@ public class Display extends Thread {
 		float x, y, h;
 		String posStr = "";
 		while(true){
-			LCD.clear();
+			if (clear) LCD.clear();
 			x = poseProvider.getPose().getX();
 			y = poseProvider.getPose().getY();
 			h = poseProvider.getPose().getHeading();
@@ -137,4 +139,7 @@ public class Display extends Thread {
 		LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2), 0, 1);
 		LCD.drawString("H: " + Display.formattedDoubleToString(h, 2), 0, 2);
 	}
+	
+	public static void enableClear(){clear = true;}
+	public static void disableClear(){clear = false;}
 }
