@@ -38,6 +38,7 @@ public class Main {
 	public static final UltrasonicSensor ULTRASONIC = new UltrasonicSensor(SensorPort.S2);
 	public static final ColorSensor COLORSENSOR_LEFT = new ColorSensor(SensorPort.S1),
 									COLORSENSOR_RIGHT = new ColorSensor(SensorPort.S3);
+	
 	private static DifferentialPilot pilot;
 	private static Navigator nav;
 	private static MovementController moveController;
@@ -48,11 +49,10 @@ public class Main {
 	private static OdometryCorrection odoCorrection;
 	private static Arm arm;
 	
-	// TODO: Update wheel paramaters based on design
 	public static final float	 
-		LEFT_WHEEL_D = 4.2065f,
-		RIGHT_WHEEL_D = 4.2065f,
-		WHEEL_BASE = 17.65f,
+		LEFT_WHEEL_D = 4.155f,
+		RIGHT_WHEEL_D = 4.155f,
+		WHEEL_BASE = 17.525f,
 		TILE_WIDTH = 30.48f;
 	
 	// TODO: Set to 12 for real maps
@@ -141,7 +141,7 @@ public class Main {
 		arm = new Arm(ARM, Arm.ArmState.RAISED);
 		
 		// Instantiate a new blockRescuer
-		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
+		blockRescuer = new BlockRescuer(pilot, odo, ULTRASONIC, arm);
 		
 		// moveController.travelToWaypoint(new Waypoint(75, 75, 0));
 		
@@ -165,15 +165,22 @@ public class Main {
 
 	}
 
-	public static DifferentialPilot getPilot() {
-		return pilot;
-	}
-
+	/****
+	 * Get the number of the current map
+	 * 
+	 * @return the current map number
+	 */
 	public static int getMapNumber() {
 		return 0;
 	}
 	
-	public static boolean[][] getBoolMap(){
+	/****
+	 * Get the current map as a 2-D array of booleans where TRUE represents that tile
+	 * (map[x][y]) being blocked)
+	 * 
+	 * @return A 2-D array representing the current map.
+	 */
+	public static boolean[][] getMapAsBoolean(){
 		return maps[getMapNumber()];
 	}
 	/****

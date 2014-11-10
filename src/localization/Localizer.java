@@ -39,7 +39,7 @@ public class Localizer {
 	}
 	
 	public void localize(){
-		map = Main.getBoolMap();
+		map = Main.getMapAsBoolean();
 		
 		// STEP 1: GET TO CARDINAL DIRECTION
 		double oldRotateSpeed = pilot.getRotateSpeed();

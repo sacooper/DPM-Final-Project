@@ -1,5 +1,6 @@
 package navigation;
 
+import lejos.geom.Point;
 import lejos.nxt.ColorSensor;
 import lejos.nxt.Sound;
 import lejos.robotics.Color;
@@ -69,7 +70,9 @@ public class OdometryCorrection extends Thread {
 		rightCS.setFloodlight(Color.GREEN);
 		
 		int lastColorLeft = -1, lastColorRight = -1;
-
+		Pose lastPose;
+		boolean sawLeft = false, sawRight = false;
+		
 		//	This while loop is used to check if either of the ColorSensors crosses a grid line.
 		// 	If one does, it updates the odometer. It only does this when the robot is not turning.
 
@@ -89,6 +92,9 @@ public class OdometryCorrection extends Thread {
 				Pose p = odometer.getPose();
 				
 				if (lastColorLeft - newColorLeft > THRESHOLD) {
+					if (!sawLeft) sawLeft = true;
+					else lastPose = p;
+			
 					Sound.beep();
 //					System.exit(0);
 					//	The temporary angle is the angle that the robot is currently at plus
@@ -115,6 +121,9 @@ public class OdometryCorrection extends Thread {
 				//	The following if statement is nearly identical to the one above. The right 
 				//	ColorSensor is polled instead of the left one.
 				if (lastColorRight - newColorRight > THRESHOLD) {
+					if (!sawRight) sawRight = true;
+					else lastPose = p;
+					
 					Sound.beep();
 //					System.exit(1);
 					//	The rightOffset is used to calculate the tempAngle instead of the leftOffset.
@@ -132,6 +141,11 @@ public class OdometryCorrection extends Thread {
 						odometer.setPose(new Pose(p.getX(), (float) (getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)), p.getHeading()));					
 
 					
+				}
+				
+				if (sawRight && sawLeft){
+					sawLeft = sawRight = false;
+					odometer.setPose(new Pose(p.getX(), p.getY(), p.getHeading() - p.angleTo(new Point(p.getX(), p.getY()))));
 				}
 
 			}

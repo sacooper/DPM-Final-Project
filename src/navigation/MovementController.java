@@ -2,10 +2,6 @@ package navigation;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-
-import lejos.nxt.Button;
-import lejos.nxt.LCD;
 import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
@@ -26,18 +22,52 @@ import main.Main;
  * @author Scott Cooper
  */
 public class MovementController{
+	
+	/*****
+	 * Implementation of a NavigationMesh using tiles as the nodes.
+	 * <br>
+	 * A node can only be connect to tiles it is touching (the 4 surrounding tiles),
+	 * ensuring that all paths found only require movement in the X and Y directions,
+	 * therefore all movement on a large scale can be corrected usng <code>OdometryCorrection</code>
+	 * <br>
+	 * This is to be utilized by the <code>NodePathFinder</code> using the A* algorithm
+	 * provided via the leJOS library
+	 * 
+	 * @author Scott Cooper
+	 */
 	private static class Grid implements NavigationMesh {
+		
+		/****
+		 * Check if a <code>Node</code> is within in the bounds of the current map.
+		 * @param n The node to check the validity of
+		 * @return True iff the node 'n' is valid on the current map
+		 */
 		private static boolean isValid(Node n){
 			return n.x >= 0 && n.x < Main.NUM_TILES && n.y >= 0 && n.y < Main.NUM_TILES;}
 		
+		// Set of nodes in this NavigationMesh
 		private ArrayList<Node> set;
+		
+		// The map used
 		private boolean[][] map;
 		
+		/**
+		 * Instantiate a new Grid using the provided map
+		 * 
+		 * @param map The map to base the grid off of
+		 */
 		public Grid(boolean[][] map){
 			this.map = map;
 			regenerate();
 		}
 		
+		/***
+		 * Add a node to this <code>NavigationMesh</code>. Note that 
+		 * the value of neighbors is not used because of the inherint
+		 * maximum of 4
+		 * 
+		 * {@inheritDoc}
+		 */
 		@Override
 		public int addNode(Node node, int neighbors) {
 			set.add(node);
@@ -56,6 +86,11 @@ public class MovementController{
 			return n_count;
 		}
 
+		/****
+		 * Remove a node from the given mesh.
+		 * 
+		 * {@inheritDoc}
+		 */
 		@Override
 		public boolean removeNode(Node node) {
 			if (!set.contains(node))
@@ -67,6 +102,11 @@ public class MovementController{
 			
 		}
 
+		/***
+		 * Connect node1 and node2. 
+		 * 
+		 * {@inheritDoc}
+		 */
 		@Override
 		public boolean connect(Node node1, Node node2) {
 			if (isValid(node1) && isValid(node2)){
@@ -77,6 +117,11 @@ public class MovementController{
 
 		}
 
+		/****
+		 * Disconnect node1 and node2.
+		 * 
+		 * {@inheritDoc}
+		 */
 		@Override
 		public boolean disconnect(Node node1, Node node2) {
 			if (node1.getNeighbors().contains(node2) && node1.getNeighbors().contains(node1)){
@@ -86,11 +131,22 @@ public class MovementController{
 			} else return false;
 		}
 
+		/****
+		 * Get the current mesh.
+		 * 
+		 * {@inheritDoc}
+		 */
 		@Override
 		public Collection<Node> getMesh() {
 			return set;
 		}
 
+		/*****
+		 * Regenerate the set of nodes using the map provided
+		 * during instantiation.
+		 * 
+		 * {@inheritDoc}
+		 */
 		@Override
 		public void regenerate() {
 			set = new ArrayList<Node>();
@@ -118,7 +174,7 @@ public class MovementController{
 	public MovementController(Navigator nav){
 		this.nav = nav;
 
-		Grid grid = new Grid(Main.getBoolMap());
+		Grid grid = new Grid(Main.getMapAsBoolean());
 		pathFinder = new NodePathFinder(new AstarSearchAlgorithm(), grid);
 	}
 	
@@ -152,6 +208,7 @@ public class MovementController{
 			way.x = way.x * Main.TILE_WIDTH - Main.TILE_WIDTH/2f;
 			way.y = way.y * Main.TILE_WIDTH - Main.TILE_WIDTH/2f;
 		}
+		
 		nav.singleStep(false);
 		nav.followPath(p);
 		nav.waitForStop();
