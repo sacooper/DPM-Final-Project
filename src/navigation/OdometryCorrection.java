@@ -1,6 +1,6 @@
 package navigation;
 
-import lejos.geom.Point;
+import lejos.nxt.Button;
 import lejos.nxt.ColorSensor;
 import lejos.nxt.LCD;
 import lejos.nxt.Sound;
@@ -26,12 +26,11 @@ import main.Main;
  */
 
 public class OdometryCorrection extends Thread {
-	private static final byte CORRECTION_PERIOD = 10;
+	private static final byte CORRECTION_PERIOD = 5;
 	private static boolean enabled;
-	private final static double X_OFFSET = 4.5, // 7.3
-								Y_OFFSET = 4.5, // 7.3
-								THRESHOLD_LEFT = 11,
-								THRESHOLD_RIGHT = 9;
+	private final static double X_OFFSET = 4, // 7.3
+								Y_OFFSET = 7, // 7.3
+								THRESHOLD = 20;
 
 	private OdometryPoseProvider odometer;
 	private ColorSensor leftCS, rightCS;
@@ -66,21 +65,21 @@ public class OdometryCorrection extends Thread {
 		// 	Calculate the hypotenuse, as well as the angle offset for both the left and right
 		//	ColorSensors.
 		final double hypotenuse = Math.sqrt(X_OFFSET*X_OFFSET + Y_OFFSET*Y_OFFSET);
-		final double leftOffset = Math.PI + Math.atan(Y_OFFSET/X_OFFSET);
-		final double rightOffset = Math.PI - Math.atan(Y_OFFSET/X_OFFSET);
+		final double leftOffset = - Math.atan(Y_OFFSET/X_OFFSET);
+		final double rightOffset = -leftOffset;
 
 		leftCS.setFloodlight(Color.GREEN);
 		rightCS.setFloodlight(Color.GREEN);
 		
 		int lastColorLeft = -1, lastColorRight = -1;
-		Pose lastPose = null;
+		int ticks = 0;
+		boolean leftFirst = false;
 		boolean sawLeft = false, sawRight = false;
 		
 		//	This while loop is used to check if either of the ColorSensors crosses a grid line.
 		// 	If one does, it updates the odometer. It only does this when the robot is not turning.
 
 		while (true) {
-			
 			correctionStart = System.currentTimeMillis();
 			int newColorLeft = leftCS.getNormalizedLightValue(), 
 				newColorRight = rightCS.getNormalizedLightValue();
@@ -93,20 +92,14 @@ public class OdometryCorrection extends Thread {
 				//	If the light value read by the ColorSensor is below the ambient light
 				//	by a percentage, the ColorSensor has crossed a grid line.
 				Pose p = odometer.getPose();
-				
-				if (lastColorLeft - newColorLeft > THRESHOLD_LEFT) {
-					if (!sawLeft && sawRight){
-						sawLeft = true;
-					} else if (!sawLeft && !sawRight){
-						sawLeft = true;
-						lastPose = p;
-					}
-			
+				ticks++;
+				if (lastColorLeft - newColorLeft > THRESHOLD) {
+	
 					Sound.beep();
 //					System.exit(0);
 					//	The temporary angle is the angle that the robot is currently at plus
 					//	the left offset angle.
-					tempAngle = (p.getHeading()-90)*Math.PI/180 + leftOffset;
+					tempAngle = (p.getHeading())*Math.PI/180 + leftOffset -Math.PI/2;
 
 					//	If the angle is over 2*PI, it is corrected.
 					if (tempAngle > 2*Math.PI)
@@ -114,51 +107,56 @@ public class OdometryCorrection extends Thread {
 
 					//	The XError and YError are set as the difference between the closest grid 
 					//	line according to the odometer and the measured position of the grid line.
-					XError = Math.abs(getLine(p.getX() + hypotenuse * Math.cos(tempAngle)) - (p.getX() + hypotenuse * Math.cos(tempAngle)));
-					YError = Math.abs(getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - (p.getY() + hypotenuse * Math.sin(tempAngle)));
+					XError = Math.abs(getLine(p.getX() + hypotenuse * Math.sin(tempAngle)) - (p.getX() + hypotenuse * Math.sin(tempAngle)));
+					YError = Math.abs(getLine(p.getY() + hypotenuse * Math.cos(tempAngle)) - (p.getY() + hypotenuse * Math.cos(tempAngle)));
 
 					//	The minimum between the X and Y error is found. If the X error is the 
 					//	smaller, the X position of the odometer is updated. If the Y is smaller,
 					//	the Y position of the odometer is updated.
 					if(Math.min(XError,  YError) == XError)		
-						odometer.setPose(new Pose((float) (getLine(p.getX() + hypotenuse * Math.cos(tempAngle)) - hypotenuse * Math.cos(tempAngle)), p.getY(), p.getHeading()));			
+						odometer.setPose(new Pose((float) (getLine(p.getX() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)), p.getY(), p.getHeading()));			
 					else
-						odometer.setPose(new Pose(p.getX(), (float) (getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)), p.getHeading()));					
+						odometer.setPose(new Pose(p.getX(), (float) (getLine(p.getY() + hypotenuse * Math.cos(tempAngle)) - hypotenuse * Math.cos(tempAngle)), p.getHeading()));
+					
+					if (!sawRight ){
+						ticks = 0;
+						leftFirst = true;
+					}
+					sawLeft = true;
 				}
 				//	The following if statement is nearly identical to the one above. The right 
 				//	ColorSensor is polled instead of the left one.
-				if (lastColorRight - newColorRight > THRESHOLD_RIGHT) {
-					if (!sawRight && sawLeft){
-						sawRight = true;
-					} else if (!sawRight && !sawLeft){
-						sawRight = true;
-						lastPose = p;
-					}
-					
+				if (lastColorRight - newColorRight > THRESHOLD) {
 					Sound.beep();
 //					System.exit(1);
 					//	The rightOffset is used to calculate the tempAngle instead of the leftOffset.
-					tempAngle = (p.getHeading()-90)*Math.PI/180 + rightOffset;
+					tempAngle = (p.getHeading())*Math.PI/180 + rightOffset - Math.PI/2;
 
 					if (tempAngle > 2*Math.PI)
 						tempAngle -= 2*Math.PI;
 
-					XError = Math.abs(getLine(p.getX() + hypotenuse * Math.cos(tempAngle)) - (p.getX() + hypotenuse * Math.cos(tempAngle)));
-					YError = Math.abs(getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - (p.getY() + hypotenuse * Math.sin(tempAngle)));
+					XError = Math.abs(getLine(p.getX() + hypotenuse * Math.sin(tempAngle)) - (p.getX() + hypotenuse * Math.sin(tempAngle)));
+					YError = Math.abs(getLine(p.getY() + hypotenuse * Math.cos(tempAngle)) - (p.getY() + hypotenuse * Math.cos(tempAngle)));
 
 					if(Math.min(XError,  YError) == XError)				
-						odometer.setPose(new Pose((float) (getLine(p.getX() + hypotenuse * Math.cos(tempAngle)) - hypotenuse * Math.cos(tempAngle)), p.getY(), p.getHeading()));					
+						odometer.setPose(new Pose((float) (getLine(p.getX() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)), p.getY(), p.getHeading()));					
 					else
-						odometer.setPose(new Pose(p.getX(), (float) (getLine(p.getY() + hypotenuse * Math.sin(tempAngle)) - hypotenuse * Math.sin(tempAngle)), p.getHeading()));					
-
+						odometer.setPose(new Pose(p.getX(), (float) (getLine(p.getY() + hypotenuse * Math.cos(tempAngle)) - hypotenuse * Math.cos(tempAngle)), p.getHeading()));					
+					
+					if ( !sawLeft){
+						ticks = 0;
+						leftFirst = false;
+					}
+					sawRight = true;
 					
 				}
 				
+				
 				if (sawRight && sawLeft){
-					sawLeft = sawRight = false;
-					odometer.setPose(new Pose(p.getX(), p.getY(), p.getHeading() + lastPose.angleTo(new Point(p.getX(), p.getY()))));
-					Display.disableClear();
-					LCD.drawString(lastPose.angleTo(new Point(p.getX(), p.getY()))+ "", 0, 6);
+					sawRight = false;
+					sawLeft = false;
+					
+					odometer.setPose(new Pose(odometer.getPose().getX(), odometer.getPose().getY(), (float) (p.getHeading() + (leftFirst ? -ticks : ticks)*Main.getPilot().getTravelSpeed()/46f)));
 				}
 
 			}
@@ -167,12 +165,12 @@ public class OdometryCorrection extends Thread {
 			lastColorRight = newColorRight;
 			
 			// this ensures the odometry correction occurs only once every period
-			correctionEnd = System.currentTimeMillis();
-			if (correctionEnd - correctionStart < CORRECTION_PERIOD) {
-				try {
-					Thread.sleep(CORRECTION_PERIOD - (correctionEnd - correctionStart));
-				} catch (InterruptedException e) {}
-			}
+//			correctionEnd = System.currentTimeMillis();
+//			if (correctionEnd - correctionStart < CORRECTION_PERIOD) {
+//				try {
+//					Thread.sleep(CORRECTION_PERIOD - (correctionEnd - correctionStart));
+//				} catch (InterruptedException e) {}
+//			}
 		}
 	}
 	

@@ -1,5 +1,6 @@
 package blocks;
 
+import lejos.nxt.LCD;
 import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
@@ -15,7 +16,7 @@ import navigation.OdometryCorrection;
 public class BlockRescuer {	
 	private DifferentialPilot pilot;
 	private final double WIDTH = Main.TILE_WIDTH, HEIGHT = 2 * Main.TILE_WIDTH;
-	private final int THRESHOLD = 3;
+	private final int THRESHOLD = 2;
 	private UltrasonicSensor us;
 	private OdometryPoseProvider odo;
 	private Arm arm;
@@ -39,7 +40,12 @@ public class BlockRescuer {
 	 * at the waypoint specified for the dropoff zone.
 	 */
 	public void rescueBlock(){
+		double old_r = pilot.getRotateSpeed(), old_t = pilot.getTravelSpeed();
+
 		OdometryCorrection.disable();
+		us.continuous();
+		pilot.setTravelSpeed(7);
+		pilot.setRotateSpeed(35);
 		// Stage 1: Find block
 		int dist = searchForBlock();
 		// Stage 2: Pick up block
@@ -47,6 +53,8 @@ public class BlockRescuer {
 		pilot.travel(dist);
 		arm.raiseArm();
 		OdometryCorrection.enable();
+		pilot.setRotateSpeed(old_r);
+		pilot.setTravelSpeed(old_t);
 	}
 	
 	/***
@@ -62,16 +70,18 @@ public class BlockRescuer {
 		int dist = 0;
 		int count = 0;
 		boolean foundBlock = false;
-		while (!foundBlock && count < HEIGHT/(Main.TILE_WIDTH / 2)){
+		while (!foundBlock && count < HEIGHT/(Main.TILE_WIDTH / 3f)){
 			pilot.rotate(45);
 			int lastDistance = getFilteredData();
 			int current = lastDistance;
 			pilot.rotate(-90, true);
 			while(pilot.isMoving()){
 				current = getFilteredData();
+				LCD.clear();
+				LCD.drawInt(lastDistance - current, 0, 0);
 				if (lastDistance - current > THRESHOLD){
 					// FOUND BLOCK
-					pilot.quickStop();
+					pilot.stop();
 					foundBlock = true;
 					dist = current;
 					break;
@@ -81,9 +91,11 @@ public class BlockRescuer {
 			if (foundBlock) break;
 			count++;
 			pilot.rotate(45);
-			pilot.travel(Main.TILE_WIDTH/2f);
+			pilot.travel(Main.TILE_WIDTH/3f);
 		}
-		return dist;
+		pilot.rotate(-30);
+		pilot.travel(-10);
+		return dist+10;
 	}
 
 	/*******
@@ -94,19 +106,9 @@ public class BlockRescuer {
 	 */
 	private int getFilteredData() {
 		int dist;
-
-		// do a ping
-		us.ping();
-		// wait for the ping to complete
-		try {
-			Thread.sleep(25);
-		} catch (InterruptedException e) {
-		}
-
 		// there will be a delay here
 		dist = us.getDistance();
-		if (dist > Main.TILE_WIDTH/2)
-			dist = (int) (Main.TILE_WIDTH/2);
-		return dist;
+		
+		return (int) Math.min(dist, Main.TILE_WIDTH);
 	}
 }
