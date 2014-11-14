@@ -1,7 +1,9 @@
 package navigation;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
+
 import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
@@ -48,16 +50,12 @@ public class MovementController{
 		// Set of nodes in this NavigationMesh
 		private ArrayList<Node> set;
 		
-		// The map used
-		private boolean[][] map;
-		
 		/**
 		 * Instantiate a new Grid using the provided map
 		 * 
 		 * @param map The map to base the grid off of
 		 */
-		public Grid(boolean[][] map){
-			this.map = map;
+		public Grid(BitSet map){
 			regenerate();
 		}
 		
@@ -149,11 +147,12 @@ public class MovementController{
 		 */
 		@Override
 		public void regenerate() {
+			BitSet map = Main.getCurrentMap();
 			set = new ArrayList<Node>();
 			
-			for (int x = 0; x < map.length; x++){
-				for (int y = 0; y < map[x].length; y++){
-					if (!map[x][y]){
+			for (int x = 0; x < Main.NUM_TILES; x++){
+				for (int y = 0; y < Main.NUM_TILES; y++){
+					if (map.get(x*Main.NUM_TILES + y)){
 						addNode(new Node(x, y), 5);
 					}
 						
@@ -174,7 +173,7 @@ public class MovementController{
 	public MovementController(Navigator nav){
 		this.nav = nav;
 
-		Grid grid = new Grid(Main.getMapAsBoolean());
+		Grid grid = new Grid(Main.getCurrentMap());
 		pathFinder = new NodePathFinder(new AstarSearchAlgorithm(), grid);
 	}
 	

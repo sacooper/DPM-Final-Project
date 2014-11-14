@@ -1,6 +1,7 @@
 package localization;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Iterator;
 
 import lejos.nxt.UltrasonicSensor;
@@ -21,7 +22,7 @@ public class Localizer {
 	private DifferentialPilot pilot;	// Pilot controlling movement
 	private OdometryPoseProvider odo;
 	private static Pose startingPose;
-	private boolean[][] map;
+	private BitSet map;
 	
 	/****
 	 * Create a new localizer. The class extends MCLPoseProvider by 
@@ -39,7 +40,7 @@ public class Localizer {
 	}
 	
 	public void localize(){
-		map = Main.getMapAsBoolean();
+		map = Main.getCurrentMap();
 		
 		// STEP 1: GET TO CARDINAL DIRECTION
 		double oldRotateSpeed = pilot.getRotateSpeed();
@@ -84,19 +85,19 @@ public class Localizer {
 		int i = 0;
 		switch(d){
 		case UP:
-			while ((y+i+1) < Main.NUM_TILES && !map[x][i+y+1])
+			while ((y+i+1) < Main.NUM_TILES && !map.get(x*Main.NUM_TILES + i + y + 1))
 				i++;
 			break;
 		case DOWN:
-			while ((y-i-1) >= 0 && !map[x][i+y+1])
+			while ((y-i-1) >= 0 && !map.get(x*Main.NUM_TILES  + y - i - 1))
 				i++;
 			break;
 		case RIGHT:
-			while((x+i+1) < Main.NUM_TILES && !map[x + i + 1][y])
+			while((x+i+1) < Main.NUM_TILES && !map.get((x+i+1)*Main.NUM_TILES + y))
 				i++;
 			break;
 		case LEFT:
-			while((x-i-1) >= 0 && !map[x - i - 1][y])
+			while((x-i-1) >= 0 && !map.get((x-i-1)*Main.NUM_TILES + y))
 				i++;
 		}
 		return Math.min(4, i);
@@ -107,7 +108,7 @@ public class Localizer {
 		// Initialize possible states based on map
 		for (int x = 0; x < Main.NUM_TILES; x++){
 			for(int y = 0; y < Main.NUM_TILES; y++){
-				if (!map[x][y]){
+				if (!map.get(x*Main.NUM_TILES + y)){
 					possible.add(new Position(x, y, Direction.UP, tilesFree(Direction.UP, x, y)));
 					possible.add(new Position(x, y, Direction.DOWN, tilesFree(Direction.DOWN, x, y)));
 					possible.add(new Position(x, y, Direction.RIGHT, tilesFree(Direction.RIGHT, x, y)));
@@ -234,7 +235,7 @@ public class Localizer {
 		int x = Position.relativeX(s, r);
 		int y = Position.relativeY(s, r);
 		
-		if (x < 0 || x > (Main.NUM_TILES - 1) || y < 0 || y > (Main.NUM_TILES - 1) || map[x][y]) return false;
+		if (x < 0 || x > (Main.NUM_TILES - 1) || y < 0 || y > (Main.NUM_TILES - 1) || map.get(x*Main.NUM_TILES + y)) return false;
 		
 		return r.tilesInFront() == tilesFree(realDir, x, y);
 		

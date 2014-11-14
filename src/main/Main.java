@@ -1,13 +1,13 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 
 import lejos.geom.Line;
 import lejos.geom.Rectangle;
 import lejos.nxt.Button;
 import lejos.nxt.ButtonListener;
 import lejos.nxt.ColorSensor;
-import lejos.nxt.LCD;
 import lejos.nxt.Motor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
@@ -63,18 +63,14 @@ public class Main {
 	
 	// List of maps for use in competition
 	// usage: maps[map_number][x][y]
-	private static final boolean[][][] maps;
+	private static final BitSet[] maps;
 
 	private static final int NUM_MAPS = 6;
-	
-	// Current LineMap. Map is used in both Localization and pathfinding in MovementController
-	private static LineMap currentMap = null;
 
 	private static Waypoint pickup = new Waypoint(0, 0, 0);
 
 	private static Waypoint dropoff = new Waypoint(0, 0, 45);
 	
-//	public static final Object POSE_LOCK = odo;
 	
 	private Main(){};
 	
@@ -204,57 +200,8 @@ public class Main {
 	 * 
 	 * @return A 2-D array representing the current map.
 	 */
-	public static boolean[][] getMapAsBoolean(){
+	public static BitSet getCurrentMap(){
 		return maps[getMapNumber()];
-	}
-	/****
-	 * Get the LineMap for the Localizer
-	 * based on a given map. The number should be in the range
-	 * [0,5], representing one of the 6 maps.
-	 * @return A RangeMap representing the given map
-	 */
-	public static LineMap getMap() {
-		if (currentMap == null){
-			ArrayList<Line> lines = new ArrayList<Line>();
-			int mapNumber = Main.getMapNumber();
-			if (mapNumber >= 0 && mapNumber < 6){
-				for (int x = 0; x < Main.NUM_TILES; x++){
-					for (int y = 0; y < Main.NUM_TILES; y++){
-						if (maps[mapNumber][x][y]){	// Check if this tile is blocked
-							float left_x = ((x - 1) * Main.TILE_WIDTH);
-							float right_x = (x * Main.TILE_WIDTH);
-							float bottom_y = ((y - 1) * Main.TILE_WIDTH);
-							float top_y = (y * Main.TILE_WIDTH);
-							
-							Line bottom = new Line(left_x, bottom_y, right_x, bottom_y);
-							Line top = new Line(right_x, top_y, left_x, top_y);
-							Line left = new Line(left_x, top_y, left_x, bottom_y);
-							Line right = new Line(right_x, bottom_y, right_x, top_y);
-							
-							lines.add(bottom);
-							lines.add(right);
-							lines.add(top); 
-							lines.add(left);
-							
-						}
-					}
-				}
-
-				Line[] lineArray = new Line[lines.size()];
-				lineArray = lines.toArray(lineArray);
-				
-				currentMap = new LineMap(
-						lineArray,
-						new Rectangle(
-								(float)(Main.TILE_WIDTH * -1), // top left x
-//								(float)(Main.TILE_WIDTH * (Main.NUM_TILES - 1)), // top left y
-								(float)(Main.TILE_WIDTH * (- 1)), // top left y
-								(float)(Main.TILE_WIDTH * Main.NUM_TILES), 	 // height
-								(float)(Main.TILE_WIDTH * Main.NUM_TILES))); // width
-			} else throw new RuntimeException("Invalid Map Number");
-		}
-		
-		return currentMap;
 	}
 	
 	static {
@@ -268,21 +215,22 @@ public class Main {
 					@Override
 					public void buttonReleased(Button b) {}});
 		
-		maps = new boolean[Main.NUM_MAPS][Main.NUM_TILES][Main.NUM_TILES];
+		maps = new BitSet[Main.NUM_MAPS];
 		
 		for (int i = 0; i < 6; i++){
 			for (int x = 0; x < Main.NUM_TILES; x++){
 				for (int y = 0; y < Main.NUM_TILES; y++){
-					maps[i][x][y] = false;}}}
+					maps[i] = new BitSet(Main.NUM_TILES * Main.NUM_TILES);
+					maps[i].clear();}}}
 		
 		
 		// TODO: Initialization of maps
 		
 		// The following is from Lab 5 :
-		maps[0][0][3] = true;		// <
-		maps[0][1][0] = true;		// <
-		maps[0][2][2] = true;		// <
-		maps[0][3][2] = true;	 	// <
+		maps[0].set(0*Main.NUM_TILES + 3, true);	// (0,3)
+		maps[0].set(1*Main.NUM_TILES + 0, true);	// (1,0)
+		maps[0].set(2*Main.NUM_TILES + 2, true);	// (2,2)
+		maps[0].set(3*Main.NUM_TILES + 2, true);	// (3,2)
 		////////////////////////////////
 
 		// Initialization of map 1
