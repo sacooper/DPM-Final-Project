@@ -39,30 +39,28 @@ public class Localizer {
 		startingPose = null;
 	}
 	
-	public void localize(){
-		map = Main.getCurrentMap();
-		
-		// STEP 1: GET TO CARDINAL DIRECTION
-		double oldRotateSpeed = pilot.getRotateSpeed();
-		pilot.setRotateSpeed(90);
-		double distance = getFilteredData();
-		boolean saw_wall = false;
-		pilot.rotate(360, true);
-		while ((distance <= (Main.TILE_WIDTH - 5) || !saw_wall) && pilot.isMoving()) {
-			distance = getFilteredData();
-			if (distance <= (Main.TILE_WIDTH -5))
-				saw_wall = true;
-		}
-		pilot.stop();
-		pilot.setRotateSpeed(oldRotateSpeed);
-		
-		// STEP 2: Travel forward over a tile, ensuring we're at the center 
-		//			of a tile with cardinal heading
-		pilot.travel(Main.TILE_WIDTH);
-		
-		// Orient ourselves
-		orient(generatePossibleStates());
-	}
+//	public void _localize(){
+//		map = Main.getCurrentMap();
+//		
+//		// STEP 1: GET TO CARDINAL DIRECTION
+//		double oldRotateSpeed = pilot.getRotateSpeed();
+//		pilot.setRotateSpeed(90);
+//		double distance = getFilteredData();
+//		boolean saw_wall = false;
+//		pilot.rotate(360, true);
+//		while ((distance <= (Main.TILE_WIDTH - 5) || !saw_wall) && pilot.isMoving()) {
+//			distance = getFilteredData();
+//			if (distance <= (Main.TILE_WIDTH -5))
+//				saw_wall = true;
+//		}
+//		pilot.stop();
+//		pilot.setRotateSpeed(oldRotateSpeed);
+//		
+//		// STEP 2: Travel forward over a tile, ensuring we're at the center 
+//		//			of a tile with cardinal heading
+//		pilot.travel(Main.TILE_WIDTH);
+//	
+//	}
 
 	/***
 	 * Get the starting pose or null if it has not yet been determined
@@ -81,8 +79,8 @@ public class Localizer {
 	public static synchronized void setStartingPose(Pose startingPose) {
 			Localizer.startingPose = startingPose;}
 	
-	private int tilesFree(Direction d, int x, int y){
-		int i = 0;
+	private byte tilesFree(Direction d, byte x, byte y){
+		byte i = 0;
 		switch(d){
 		case UP:
 			while ((y+i+1) < Main.NUM_TILES && !map.get(x*Main.NUM_TILES + i + y + 1))
@@ -100,14 +98,14 @@ public class Localizer {
 			while((x-i-1) >= 0 && !map.get((x-i-1)*Main.NUM_TILES + y))
 				i++;
 		}
-		return Math.min(4, i);
+		return 4 < i ? 4 : i;
 		
 	}
 	private ArrayList<Position> generatePossibleStates(){
 		ArrayList<Position> possible = new ArrayList<Position>();
 		// Initialize possible states based on map
-		for (int x = 0; x < Main.NUM_TILES; x++){
-			for(int y = 0; y < Main.NUM_TILES; y++){
+		for (byte x = 0; x < Main.NUM_TILES; x++){
+			for(byte y = 0; y < Main.NUM_TILES; y++){
 				if (!map.get(x*Main.NUM_TILES + y)){
 					possible.add(new Position(x, y, Direction.UP, tilesFree(Direction.UP, x, y)));
 					possible.add(new Position(x, y, Direction.DOWN, tilesFree(Direction.DOWN, x, y)));
@@ -148,7 +146,8 @@ public class Localizer {
 	 * 
 	 * @return Number of observations made
 	 */
-	public int orient(ArrayList<Position> possible) {
+	public int localize() {
+		ArrayList<Position> possible = generatePossibleStates();
 		// Current direction relative to where we started
 		Direction current = Direction.UP;	
 		
@@ -156,12 +155,12 @@ public class Localizer {
 		int x = 0, y = 0, observations = 0;	
 		
 		while (possible.size() > 1) { // Narrow down list of states until we know where we started
-			int tiles_blocked = getFilteredData() / (int)Main.TILE_WIDTH;
+			byte tiles_blocked = (byte) (getFilteredData() / (int)Main.TILE_WIDTH);
 			observations++;
 
 			// Filter out now invalid orientations
 			Iterator<Position> iter = possible.iterator();
-			Position me = new Position(x, y, current, tiles_blocked);
+			Position me = new Position((byte)x, (byte)y, current, tiles_blocked);
 			while (iter.hasNext()){
 				Position s = iter.next();
 				if (!valid(s, me)){
@@ -232,8 +231,8 @@ public class Localizer {
 			realDir = Position.rotateLeft(realDir);
 		
 		// Get position
-		int x = Position.relativeX(s, r);
-		int y = Position.relativeY(s, r);
+		byte x = Position.relativeX(s, r);
+		byte y = Position.relativeY(s, r);
 		
 		if (x < 0 || x > (Main.NUM_TILES - 1) || y < 0 || y > (Main.NUM_TILES - 1) || map.get(x*Main.NUM_TILES + y)) return false;
 		

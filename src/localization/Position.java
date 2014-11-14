@@ -8,9 +8,9 @@ package localization;
  * with UP = NORTH = positive Y direction
  */
 public class Position {
-	private int x, y;			// X and Y coordinates
+	private byte x, y;			// X and Y coordinates
 	private Direction dir; 		// UP = North, DOWN = South, etc.
-	private int tilesInFront;	// Whether we are blocked
+	private byte tilesInFront;	// Whether we are blocked
 
 	/****
 	 * Create a new absolute position with the following paramaters
@@ -20,7 +20,7 @@ public class Position {
 	 * @param dir Direction relative to positive Y
 	 * @param tilesInFront Number of tiles in from of this position that are open
 	 */
-	public Position(int x, int y, Direction dir, int tilesInFront) {
+	public Position(byte x, byte y, Direction dir, byte tilesInFront) {
 		this.x = x;
 		this.y = y;
 		this.dir = dir;
@@ -30,14 +30,14 @@ public class Position {
 	 * Get the X coordinate of this position
 	 * @return X coordinate of this position
 	 */
-	public int getX() {
+	public byte getX() {
 		return x;}
 
 	/****
 	 * Get the Y coordinate of this position
 	 * @return Y coordinate of this position
 	 */
-	public int getY() {
+	public byte getY() {
 		return y;}
 
 	/****
@@ -51,7 +51,7 @@ public class Position {
 	 * Get the number of tiles free in front of this tile. A value of 0 implies there is a tile directly in front.
 	 * @return The number of open tiles in front of this position.
 	 */
-	public int tilesInFront() {
+	public byte tilesInFront() {
 		return tilesInFront;}
 	
 	/****
@@ -109,16 +109,16 @@ public class Position {
 	 * @param r The relative position to where we started
 	 * @return	The relative X coordinate based on start and r
 	 */
-	public static int relativeX(Position start, Position r) {
+	public static byte relativeX(Position start, Position r) {
 		switch (start.getDir()) {
 		case UP:
-			return start.getX() + r.getX();
+			return (byte) (start.getX() + r.getX());
 		case DOWN:
-			return start.getX() - r.getX();
+			return (byte) (start.getX() - r.getX());
 		case RIGHT:
-			return start.getX() + r.getY();
+			return (byte) (start.getX() + r.getY());
 		case LEFT:
-			return start.getX() - r.getY(); 
+			return (byte) (start.getX() - r.getY()); 
 		default:
 			throw new RuntimeException("Shouldn't happen");}
 	}
@@ -132,16 +132,16 @@ public class Position {
 	 * @param r The relative position to where we started
 	 * @return	The relative Y coordinate based on start and r
 	 */
-	public static int relativeY(Position start, Position r) {
+	public static byte relativeY(Position start, Position r) {
 		switch (start.getDir()) {
 		case LEFT:
-			return start.getY() + r.getX();
+			return (byte) (start.getY() + r.getX());
 		case RIGHT:
-			return start.getY() - r.getX();
+			return (byte) (start.getY() - r.getX());
 		case UP:
-			return start.getY() + r.getY();
+			return (byte) (start.getY() + r.getY());
 		case DOWN:
-			return start.getY() - r.getY();
+			return (byte) (start.getY() - r.getY());
 		default:
 			throw new RuntimeException("Shouldn't happen");}
 	}
