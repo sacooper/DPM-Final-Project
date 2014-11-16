@@ -13,7 +13,7 @@ import localization.Localizer;
  */
 public class Display extends Thread {
 	public static enum Action { LOCALIZING, MOVING, BLOCK_ACTION }
-	private static boolean clear;
+	private static boolean clear, paused;
 	
 	private static final int DELAY = 1000;
 	private static Action currentAction = null;
@@ -27,6 +27,7 @@ public class Display extends Thread {
 	public Display(PoseProvider poseProvider){
 		this.poseProvider = poseProvider;
 		clear = true;
+		paused = false;
 	}
 	
 	@Override
@@ -35,17 +36,18 @@ public class Display extends Thread {
 		float x, y, h;
 		String posStr = "";
 		while(true){
-			if (clear) LCD.clear();
-			x = poseProvider.getPose().getX();
-			y = poseProvider.getPose().getY();
-			h = poseProvider.getPose().getHeading();
-			
-			LCD.drawString("X: " + Display.formattedDoubleToString(x, 2) + posStr, 0, 0);
-			LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2) + posStr, 0, 1);
-			LCD.drawString("H: " + Display.formattedDoubleToString(h, 2) + posStr, 0, 2);
-			LCD.drawString(currentActionAsString(), 0, 3);
-			LCD.drawString("Start: " + startingPoseAsString(), 0, 4);
-			
+			if (!paused){
+				if (clear) LCD.clear();
+				x = poseProvider.getPose().getX();
+				y = poseProvider.getPose().getY();
+				h = poseProvider.getPose().getHeading();
+				
+				LCD.drawString("X: " + Display.formattedDoubleToString(x, 2) + posStr, 0, 0);
+				LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2) + posStr, 0, 1);
+				LCD.drawString("H: " + Display.formattedDoubleToString(h, 2) + posStr, 0, 2);
+				LCD.drawString(currentActionAsString(), 0, 3);
+				LCD.drawString("Start: " + startingPoseAsString(), 0, 4);
+			}
 			try{
 				Thread.sleep(DELAY);
 			}catch(Exception e){}
@@ -142,4 +144,6 @@ public class Display extends Thread {
 	
 	public static void enableClear(){clear = true;}
 	public static void disableClear(){clear = false;}
+	public static void pause(){paused = true;}
+	public static void resume(){paused=false;}
 }

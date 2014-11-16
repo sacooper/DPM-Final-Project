@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 
+import lejos.nxt.Button;
+import lejos.nxt.LCD;
+import lejos.nxt.Sound;
 import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Pose;
+import main.Display;
 import main.Main;
 
 /*******
@@ -36,6 +40,7 @@ public class Localizer {
 		this.pilot = pilot;
 		this.odo = odo;
 		this.us_scanner = us_scanner;
+		this.map = Main.getCurrentMap();
 		startingPose = null;
 	}
 
@@ -105,8 +110,7 @@ public class Localizer {
 
 		// there will be a delay here
 		dist = us_scanner.getDistance();
-		if (dist > 50)	dist = 50;
-		return dist;
+		return dist > 50 ? 50 : dist;
 	}
 	
 	/********
@@ -122,9 +126,9 @@ public class Localizer {
 		int x = 0, y = 0, observations = 0;	
 		
 		while (possible.size() > 1) { // Narrow down list of states until we know where we started
-			boolean isBlocked;
+			boolean isBlocked = true;
 			for (byte i = 0; i < 4 && possible.size() > 1; i++){
-				isBlocked = getFilteredData() < Main.TILE_WIDTH / 2f;
+				isBlocked = getFilteredData() < (Main.TILE_WIDTH);
 				observations++;
 				Position me = new Position(x, y, current, isBlocked);
 				Iterator<Position> iter = possible.iterator();
@@ -132,16 +136,18 @@ public class Localizer {
 					if(!valid(iter.next(), me))
 						iter.remove();
 				}
-				pilot.rotate(-90);
-				current = Position.rotateLeft(current);
+				if (i != 3){
+					pilot.rotate(-90, false);
+					current = Position.rotateRight(current);}
 			}
 			
 			
 			
-			isBlocked = getFilteredData() < Main.TILE_WIDTH / 2f;
+//			isBlocked = getFilteredData() < (Main.TILE_WIDTH);
 			while (isBlocked){
-				pilot.rotate(-90);
-				current = Position.rotateLeft(current);
+				pilot.rotate(-90, false);
+				current = Position.rotateRight(current);
+				isBlocked = getFilteredData() < Main.TILE_WIDTH;
 			}
 			
 			pilot.travel(Main.TILE_WIDTH);
@@ -181,31 +187,54 @@ public class Localizer {
 			throw new RuntimeException("No possible states");
 		
 		Position startingPoint = possible.get(0);
-
-		synchronized(odo){		// Update odometer based on known starting location
-			double odo_x, odo_y;
-			switch(startingPoint.getDir()){	// Need to get absolute change from starting point relative to where we are
-			case DOWN:
-				odo_x = -odo.getPose().getX();
-				odo_y = -odo.getPose().getY();
-				break;
-			case LEFT:
-				odo_x = -odo.getPose().getY();
-				odo_y = odo.getPose().getX();
-				break;
-			case RIGHT:
-				odo_x = odo.getPose().getY();
-				odo_y = -odo.getPose().getX();
-				break;
-			case UP:
-				odo_x = odo.getPose().getX();
-				odo_y = odo.getPose().getY();
-				break;
-			default: throw new RuntimeException("Shouldn't Happen");}
-			float new_x = (float) ((((double)startingPoint.getX()) - 0.5)*Main.TILE_WIDTH + odo_x);
-			float new_y = (float) ((((double)startingPoint.getY()) - 0.5)*Main.TILE_WIDTH + odo_y);
-			float new_heading = (float) (odo.getPose().getHeading() + (90f * startingPoint.getDir().v));
-			odo.setPose(new Pose(new_x, new_y, new_heading));}
+		Display.pause();
+		LCD.clear();
+		LCD.drawString(startingPoint.getX() + ", " + startingPoint.getY(), 0, 0);
+		LCD.drawString(startingPoint.getDir().asCardinal(), 0, 1);
+		Button.waitForAnyPress();
+		Display.resume();
+		
+		float real_x = Position.relativeX(startingPoint, new Position(x, y, current, false));
+		float real_y = Position.relativeY(startingPoint, new Position(x, y, current, false));
+		Direction real = startingPoint.getDir();
+		for (int i = 0; i < current.v; i++)
+			real = Position.rotateLeft(real);
+		
+		float heading = 0;
+		switch (real){
+			case UP: heading = 90f; break;
+			case DOWN: heading = -90f; break;
+			case RIGHT: heading = 0f; break;
+			case LEFT: heading = 180f; break;
+			default: throw new RuntimeException("Invalid direction");
+		}
+		
+		odo.setPose(new Pose(real_x * Main.TILE_WIDTH - Main.TILE_WIDTH /2f, real_y * Main.TILE_WIDTH - Main.TILE_WIDTH /2f, heading));
+//		synchronized(odo){		// Update odometer based on known starting location
+//			double odo_x, odo_y;
+//			switch(startingPoint.getDir()){	// Need to get absolute change from starting point relative to where we are
+//			case DOWN:
+//				odo_x = -odo.getPose().getX();
+//				odo_y = -odo.getPose().getY();
+//				break;
+//			case LEFT:
+//				odo_x = -odo.getPose().getY();
+//				odo_y = odo.getPose().getX();
+//				break;
+//			case RIGHT:
+//				odo_x = odo.getPose().getY();
+//				odo_y = -odo.getPose().getX();
+//				break;
+//			case UP:
+//				odo_x = odo.getPose().getX();
+//				odo_y = odo.getPose().getY();
+//				break;
+//			default: throw new RuntimeException("Shouldn't Happen");}
+//			float new_x = (float) ((((double)startingPoint.getX()) - 0.5)*Main.TILE_WIDTH + odo_x);
+//			float new_y = (float) ((((double)startingPoint.getY()) - 0.5)*Main.TILE_WIDTH + odo_y);
+//			float new_heading = (float) (odo.getPose().getHeading() + (90f * startingPoint.getDir().v));
+//			odo.setPose(new Pose(new_x, new_y, new_heading));}
+		
 		return observations;	
 	}
 
@@ -220,9 +249,9 @@ public class Localizer {
 	private boolean valid(Position s, Position r){
 		// Get real direction to check based on Position checking and 
 		// where we are facing based on where we started
-		Direction realDir = s.getDir();
+		Direction correctedDir = s.getDir();
 		for (int i = 0; i < r.getDir().v; i++)
-			realDir = Position.rotateLeft(realDir);
+			correctedDir = Position.rotateLeft(correctedDir);
 		
 		// Get position
 		byte x = Position.relativeX(s, r);
@@ -231,7 +260,7 @@ public class Localizer {
 		if (x < 0 || x > (Main.NUM_TILES - 1) || y < 0 || y > (Main.NUM_TILES - 1) || map.get(x*Main.NUM_TILES + y)) return false;
 		
 		
-		switch(realDir){
+		switch(correctedDir){
 		case UP:
 			if (r.isBlocked())
 				return (y == (Main.NUM_TILES - 1) || map.get(x*Main.NUM_TILES + y + 1));

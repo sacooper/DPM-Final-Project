@@ -1,10 +1,7 @@
 package main;
 
-import java.util.ArrayList;
 import java.util.BitSet;
 
-import lejos.geom.Line;
-import lejos.geom.Rectangle;
 import lejos.nxt.Button;
 import lejos.nxt.ButtonListener;
 import lejos.nxt.ColorSensor;
@@ -13,7 +10,6 @@ import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.localization.OdometryPoseProvider;
-import lejos.robotics.mapping.LineMap;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
@@ -76,17 +72,23 @@ public class Main {
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
 		pilot.setAcceleration(2000);
-		pilot.setTravelSpeed(24);
-		
+		pilot.setTravelSpeed(22);
+		pilot.setRotateSpeed(70);
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
+		display = new Display(odo);
+		display.start();
 		
-		
+		localizer = new Localizer(pilot, ULTRASONIC, odo);
 		arm = new Arm(ARM);
 		blockRescuer = new BlockRescuer(pilot, odo, ULTRASONIC, arm);
 		Button.waitForAnyPress();
 		
-		blockRescuer.rescueBlock();
+//		blockRescuer.rescueBlock();
+		
+		localizer.localize();
+		
+		Button.waitForAnyPress();
 		
 	}
 	
@@ -231,7 +233,7 @@ public class Main {
 		maps[5].set(3*Main.NUM_TILES + 2, true);	// (3,2)
 		////////////////////////////////
 
-		
+	/**********************************************	
 		// The follow are for beta demonstrations
 		// Initialization of map 0
 		maps[0].set(7 * Main.NUM_MAPS + 0); // (7,0)
@@ -259,6 +261,7 @@ public class Main {
 		// Initialization of map 4
 		
 		// Initialization of map 5
+	 **********************************************/
 	}
 
 	public static DifferentialPilot getPilot() {
