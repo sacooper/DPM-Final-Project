@@ -16,7 +16,7 @@ import navigation.OdometryCorrection;
 public class BlockRescuer {	
 	private DifferentialPilot pilot;
 	private final double WIDTH = Main.TILE_WIDTH, HEIGHT = 2 * Main.TILE_WIDTH;
-	private final int THRESHOLD = 2;
+	private final int THRESHOLD = 2, SWEEP = 35;
 	private UltrasonicSensor us;
 	private OdometryPoseProvider odo;
 	private Arm arm;
@@ -51,8 +51,8 @@ public class BlockRescuer {
 		// Stage 2: Pick up block
 		arm.lowerArm();
 		pilot.travel(dist);
-		arm.raiseArm();
-		OdometryCorrection.enable();
+		arm.raiseWithReverse(pilot);
+//		OdometryCorrection.enable();
 		pilot.setRotateSpeed(old_r);
 		pilot.setTravelSpeed(old_t);
 	}
@@ -64,21 +64,16 @@ public class BlockRescuer {
 	 */
 	private int searchForBlock(){
 		// TODO: FIND OPTIMAL ROTATE SPEED
-		pilot.rotate(-odo.getPose().getHeading());
-		pilot.travel(WIDTH/2f);
-		pilot.rotate(90);
 		int dist = 0;
 		int count = 0;
 		boolean foundBlock = false;
 		while (!foundBlock && count < HEIGHT/(Main.TILE_WIDTH / 3f)){
-			pilot.rotate(45);
+			pilot.rotate(SWEEP);
 			int lastDistance = getFilteredData();
 			int current = lastDistance;
-			pilot.rotate(-90, true);
+			pilot.rotate(-2 * SWEEP, true);
 			while(pilot.isMoving()){
 				current = getFilteredData();
-				LCD.clear();
-				LCD.drawInt(lastDistance - current, 0, 0);
 				if (lastDistance - current > THRESHOLD){
 					// FOUND BLOCK
 					pilot.stop();
@@ -90,12 +85,12 @@ public class BlockRescuer {
 			}
 			if (foundBlock) break;
 			count++;
-			pilot.rotate(45);
+			pilot.rotate(SWEEP);
 			pilot.travel(Main.TILE_WIDTH/3f);
 		}
-		pilot.rotate(-30);
-		pilot.travel(-10);
-		return dist+10;
+		pilot.rotate(-15);
+		pilot.travel(-15);
+		return dist+7;
 	}
 
 	/*******
@@ -109,6 +104,6 @@ public class BlockRescuer {
 		// there will be a delay here
 		dist = us.getDistance();
 		
-		return (int) Math.min(dist, Main.TILE_WIDTH);
+		return (int) Math.min(dist, Main.TILE_WIDTH*.75);
 	}
 }

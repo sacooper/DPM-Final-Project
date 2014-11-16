@@ -30,7 +30,7 @@ public class OdometryCorrection extends Thread {
 	private static boolean enabled;
 	private final static double X_OFFSET = 4, // 7.3
 								Y_OFFSET = 7, // 7.3
-								THRESHOLD = 20;
+								THRESHOLD = 25;
 
 	private OdometryPoseProvider odometer;
 	private ColorSensor leftCS, rightCS;
@@ -155,7 +155,7 @@ public class OdometryCorrection extends Thread {
 				if (sawRight && sawLeft){
 					sawRight = false;
 					sawLeft = false;
-					
+					Sound.beep();
 					odometer.setPose(new Pose(odometer.getPose().getX(), odometer.getPose().getY(), (float) (p.getHeading() + (leftFirst ? -ticks : ticks)*Main.getPilot().getTravelSpeed()/46f)));
 				}
 

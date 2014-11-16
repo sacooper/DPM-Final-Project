@@ -152,7 +152,7 @@ public class MovementController{
 			
 			for (int x = 0; x < Main.NUM_TILES; x++){
 				for (int y = 0; y < Main.NUM_TILES; y++){
-					if (map.get(x*Main.NUM_TILES + y)){
+					if (!map.get(x*Main.NUM_TILES + y)){
 						addNode(new Node(x, y), 5);
 					}
 						
@@ -172,13 +172,12 @@ public class MovementController{
 	 */
 	public MovementController(Navigator nav){
 		this.nav = nav;
-
 		Grid grid = new Grid(Main.getCurrentMap());
 		pathFinder = new NodePathFinder(new AstarSearchAlgorithm(), grid);
 	}
 	
 	private static float coordAsTile(double c){
-		return (int)((c + Main.TILE_WIDTH) / Main.TILE_WIDTH);
+		return (int)((c + Main.TILE_WIDTH/1.5f) / Main.TILE_WIDTH);
 	}
 	
 	/***
@@ -193,7 +192,9 @@ public class MovementController{
 		
 		Pose me = nav.getPoseProvider().getPose();
 		Pose tile = new Pose(coordAsTile(me.getX()), coordAsTile(me.getY()), me.getHeading());
+//		throw new RuntimeException(tile.getX() + " " + tile.getY() + " " + tile.getHeading());
 		Waypoint dest = new Waypoint(coordAsTile(w.getX()), coordAsTile(w.getY()));
+//		throw new RuntimeException(dest.getX() + " " + dest.getY() + " " + dest.getHeading());
 		try {
 			p = pathFinder.findRoute(tile, dest);
 		} catch (DestinationUnreachableException e) {

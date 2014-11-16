@@ -150,49 +150,26 @@ public class Localizer {
 				isBlocked = getFilteredData() < Main.TILE_WIDTH;
 			}
 			
-			pilot.travel(Main.TILE_WIDTH);
-			switch(current){
-			case DOWN: y--; break;
-			case LEFT: x--; break;
-			case RIGHT: x++; break;
-			case UP: y++; break;
-			default: throw new RuntimeException("Shouldn't Happen");}
-
-//			// Filter out now invalid orientations
-//			Iterator<Position> iter = possible.iterator();
-//			Position me = new Position((byte)x, (byte)y, current, isBlocked);
-//			while (iter.hasNext()){
-//				Position s = iter.next();
-//				if (!valid(s, me)){
-//					iter.remove();}}
-//			
-//			if (possible.size() == 1) break;
-//			
-//			// TODO: Improved decision making
-//			if (isBlocked) {	
-//				pilot.rotate(-90);
-//				current = Position.rotateLeft(current);
-//			} else {
-//				pilot.travel(Main.TILE_WIDTH);
-//				switch(current){
-//				case DOWN: y--; break;
-//				case LEFT: x--; break;
-//				case RIGHT: x++; break;
-//				case UP: y++; break;
-//				default: throw new RuntimeException("Shouldn't Happen");}}
-			
+			if (possible.size() > 1){
+				pilot.travel(Main.TILE_WIDTH);
+				switch(current){
+				case DOWN: y--; break;
+				case LEFT: x--; break;
+				case RIGHT: x++; break;
+				case UP: y++; break;
+				default: throw new RuntimeException("Shouldn't Happen");}}	
 		}
 
 		if (possible.size() != 1)
 			throw new RuntimeException("No possible states");
 		
 		Position startingPoint = possible.get(0);
-		Display.pause();
-		LCD.clear();
-		LCD.drawString(startingPoint.getX() + ", " + startingPoint.getY(), 0, 0);
-		LCD.drawString(startingPoint.getDir().asCardinal(), 0, 1);
-		Button.waitForAnyPress();
-		Display.resume();
+//		Display.pause();
+//		LCD.clear();
+//		LCD.drawString(startingPoint.getX() + ", " + startingPoint.getY(), 0, 0);
+//		LCD.drawString(startingPoint.getDir().asCardinal(), 0, 1);
+//		Button.waitForAnyPress();
+//		Display.resume();
 		
 		float real_x = Position.relativeX(startingPoint, new Position(x, y, current, false));
 		float real_y = Position.relativeY(startingPoint, new Position(x, y, current, false));
@@ -210,31 +187,6 @@ public class Localizer {
 		}
 		
 		odo.setPose(new Pose(real_x * Main.TILE_WIDTH - Main.TILE_WIDTH /2f, real_y * Main.TILE_WIDTH - Main.TILE_WIDTH /2f, heading));
-//		synchronized(odo){		// Update odometer based on known starting location
-//			double odo_x, odo_y;
-//			switch(startingPoint.getDir()){	// Need to get absolute change from starting point relative to where we are
-//			case DOWN:
-//				odo_x = -odo.getPose().getX();
-//				odo_y = -odo.getPose().getY();
-//				break;
-//			case LEFT:
-//				odo_x = -odo.getPose().getY();
-//				odo_y = odo.getPose().getX();
-//				break;
-//			case RIGHT:
-//				odo_x = odo.getPose().getY();
-//				odo_y = -odo.getPose().getX();
-//				break;
-//			case UP:
-//				odo_x = odo.getPose().getX();
-//				odo_y = odo.getPose().getY();
-//				break;
-//			default: throw new RuntimeException("Shouldn't Happen");}
-//			float new_x = (float) ((((double)startingPoint.getX()) - 0.5)*Main.TILE_WIDTH + odo_x);
-//			float new_y = (float) ((((double)startingPoint.getY()) - 0.5)*Main.TILE_WIDTH + odo_y);
-//			float new_heading = (float) (odo.getPose().getHeading() + (90f * startingPoint.getDir().v));
-//			odo.setPose(new Pose(new_x, new_y, new_heading));}
-		
 		return observations;	
 	}
 
