@@ -21,10 +21,7 @@ public class Arm {
 		LOWERED, 
 		
 		/**Arm is currently raised*/
-		RAISED, 
-		
-		/**Arm has just released a block. */
-		DROPPED}
+		RAISED}
 	
 	private NXTRegulatedMotor arm;
 	private ArmState armState;
@@ -49,23 +46,6 @@ public class Arm {
 		this.armState = armState;
 	}
 	
-	/***
-	 * Drop a block. If the arm is not in the RAISED state, then no action is taken.
-	 * 
-	 * @return true iff the robot was original in the raised state
-	 */
-	public boolean dropBlock(){
-		// TODO: Check constants for dropBlock()
-		switch(this.armState){
-		case RAISED:
-			arm.rotate(-220);
-			this.armState = ArmState.DROPPED;
-			return true;
-		default:
-			return false;
-		}
-	}
-	
 	/****
 	 * Raise the arm
 	 */
@@ -74,11 +54,8 @@ public class Arm {
 		switch(this.armState){
 		case RAISED:
 			return;
-		case DROPPED:
-			arm.rotate(-260);
-			break;
 		case LOWERED:
-			arm.rotate(-400);
+			arm.rotate(600);
 			break;
 		}
 		this.armState = ArmState.RAISED;
@@ -91,14 +68,11 @@ public class Arm {
 		// TODO: Check constants for lowerArm()
 		switch(this.armState){
 		case RAISED:
-			arm.rotate(400);
-			break;
-		case DROPPED:
-			arm.rotate(260);
+			arm.rotate(-400);
 			break;
 		case LOWERED:
 			return;
 		}
-		this.armState = ArmState.RAISED;
+		this.armState = ArmState.LOWERED;
 	}
 }

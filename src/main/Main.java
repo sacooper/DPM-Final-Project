@@ -68,7 +68,28 @@ public class Main {
 	
 	private Main(){};
 	
+	
 	public static void main(String[] args){
+		// Instantiate a new DifferentialPilot to control movement
+		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+		pilot.setAcceleration(2000);
+		pilot.setTravelSpeed(22);
+		pilot.setRotateSpeed(70);
+		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+		odo = new OdometryPoseProvider(pilot);
+		display = new Display(odo);
+		display.start();
+		
+		localizer = new Localizer(pilot, ULTRASONIC, odo);
+		arm = new Arm(ARM);
+		blockRescuer = new BlockRescuer(pilot, odo, ULTRASONIC, arm);
+		Button.waitForAnyPress();
+		blockRescuer.rescueBlock();
+
+		
+	}
+	
+	public static void localizer_test(String[] args){
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
 		pilot.setAcceleration(2000);
@@ -180,7 +201,10 @@ public class Main {
 		moveController.travelToWaypoint(dropoff);
 		
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-		arm.dropBlock();
+		int old = ARM.getRotationSpeed();
+		ARM.setSpeed(old / 2);
+		pilot.travel(-5, true);
+		arm.lowerArm();
 		arm.raiseArm();
 
 	}
