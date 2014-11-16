@@ -10,21 +10,31 @@ package localization;
 public class Position {
 	private byte x, y;			// X and Y coordinates
 	private Direction dir; 		// UP = North, DOWN = South, etc.
-	private byte tilesInFront;	// Whether we are blocked
+	private boolean isBlocked;	// Whether we are blocked
 
 	/****
 	 * Create a new absolute position with the following paramaters
 	 * 
-	 * @param x	X coordinate relative to origin
-	 * @param y	Y coordinate relative to origin
-	 * @param dir Direction relative to positive Y
-	 * @param tilesInFront Number of tiles in from of this position that are open
+	 * @param x	X coordinate in current system
+	 * @param y	Y coordinate in current system
+	 * @param dir Direction relative to start
+	 * @param blocked Whether this position is blocked
 	 */
-	public Position(byte x, byte y, Direction dir, byte tilesInFront) {
+	public Position(byte x, byte y, Direction dir, boolean blocked) {
 		this.x = x;
 		this.y = y;
 		this.dir = dir;
-		this.tilesInFront = tilesInFront;}
+		this.isBlocked = blocked;}
+
+	/*****
+	 * Alternate constructor to all passing in paramaters as integers
+	 * @param x X coordinate in current system
+	 * @param y Y coordinate in current system
+	 * @param dir Direction relative to start
+	 * @param isBlocked Whether this position is blocked
+	 */
+	public Position(int x, int y, Direction dir, boolean isBlocked) {
+		this((byte)x, (byte)y, dir, isBlocked);}
 
 	/***
 	 * Get the X coordinate of this position
@@ -51,8 +61,8 @@ public class Position {
 	 * Get the number of tiles free in front of this tile. A value of 0 implies there is a tile directly in front.
 	 * @return The number of open tiles in front of this position.
 	 */
-	public byte tilesInFront() {
-		return tilesInFront;}
+	public boolean isBlocked() {
+		return isBlocked;}
 	
 	/****
 	 * Rotate a direction 1 left

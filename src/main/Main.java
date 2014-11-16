@@ -66,9 +66,7 @@ public class Main {
 	private static final BitSet[] maps;
 
 	private static final int NUM_MAPS = 6;
-
 	private static Waypoint pickup = new Waypoint(0, 0, 0);
-
 	private static Waypoint dropoff = new Waypoint(0, 0, 45);
 	
 	
@@ -191,7 +189,7 @@ public class Main {
 	 * @return the current map number
 	 */
 	public static int getMapNumber() {
-		return 0;
+		return 5;
 	}
 	
 	/****
@@ -227,12 +225,31 @@ public class Main {
 		// TODO: Initialization of maps
 		
 		// The following is from Lab 5 :
-		maps[0].set(0*Main.NUM_TILES + 3, true);	// (0,3)
-		maps[0].set(1*Main.NUM_TILES + 0, true);	// (1,0)
-		maps[0].set(2*Main.NUM_TILES + 2, true);	// (2,2)
-		maps[0].set(3*Main.NUM_TILES + 2, true);	// (3,2)
+		maps[5].set(0*Main.NUM_TILES + 3, true);	// (0,3)
+		maps[5].set(1*Main.NUM_TILES + 0, true);	// (1,0)
+		maps[5].set(2*Main.NUM_TILES + 2, true);	// (2,2)
+		maps[5].set(3*Main.NUM_TILES + 2, true);	// (3,2)
 		////////////////////////////////
 
+		
+		// The follow are for beta demonstrations
+		// Initialization of map 0
+		maps[0].set(7 * Main.NUM_MAPS + 0); // (7,0)
+		maps[0].set(4*Main.NUM_TILES + 1);	// (4,1)
+		maps[0].set(4*Main.NUM_TILES + 2);	// (4,2)
+		maps[0].set(4*Main.NUM_TILES + 3);	// (4,3)
+		maps[0].set(6*Main.NUM_TILES + 2);	// (6,2)
+		maps[0].set(7*Main.NUM_TILES + 2);	// (7,2)
+		maps[0].set(7*Main.NUM_TILES + 3);	// (7,3)
+		maps[0].set(0*Main.NUM_TILES + 5);	// (0,5)
+		maps[0].set(2*Main.NUM_TILES + 4);	// (2,4)
+		maps[0].set(3*Main.NUM_TILES + 5);	// (3,5)
+		maps[0].set(2*Main.NUM_TILES + 6);	// (2,6)
+		maps[0].set(2*Main.NUM_TILES + 7);	// (2,7)
+		maps[0].set(1*Main.NUM_TILES + 7);	// (1,7)
+		maps[0].set(6*Main.NUM_TILES + 5);	// (6,5)
+		maps[0].set(7*Main.NUM_TILES + 6);	// (7,6)
+		
 		// Initialization of map 1
 		
 		// Initialization of map 2
