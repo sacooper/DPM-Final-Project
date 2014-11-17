@@ -157,7 +157,9 @@ public class Localizer {
 				case LEFT: x--; break;
 				case RIGHT: x++; break;
 				case UP: y++; break;
-				default: throw new RuntimeException("Shouldn't Happen");}}	
+				default: throw new RuntimeException("Shouldn't Happen");}
+			lejos.util.Delay.msDelay(300);
+			}	
 		}
 
 		if (possible.size() != 1)

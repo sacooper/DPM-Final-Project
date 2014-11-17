@@ -51,7 +51,7 @@ public class BlockRescuer {
 		// Stage 2: Pick up block
 		arm.lowerArm();
 		pilot.travel(dist);
-		arm.raiseWithReverse(pilot);
+		arm.raiseArm();
 //		OdometryCorrection.enable();
 		pilot.setRotateSpeed(old_r);
 		pilot.setTravelSpeed(old_t);

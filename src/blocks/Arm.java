@@ -2,6 +2,7 @@ package blocks;
 
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.robotics.navigation.DifferentialPilot;
+import main.Main;
 
 /*****
  * Class represnting the arm of the robot, controlling raising and lower, and dropping
@@ -47,18 +48,6 @@ public class Arm {
 		this.armState = armState;
 	}
 	
-	public void raiseWithReverse(DifferentialPilot pilot){
-		switch(this.armState){
-		case RAISED:
-			return;
-		case LOWERED:
-			arm.rotate(200);
-			pilot.travel(-5, true);
-			arm.rotate(400);
-			this.armState = ArmState.RAISED;
-		}
-	}
-	
 	/****
 	 * Raise the arm
 	 */
@@ -68,7 +57,7 @@ public class Arm {
 		case RAISED:
 			return;
 		case LOWERED:
-			arm.rotate(600);
+			arm.rotate(500);
 			break;
 		}
 		this.armState = ArmState.RAISED;
@@ -81,7 +70,7 @@ public class Arm {
 		// TODO: Check constants for lowerArm()
 		switch(this.armState){
 		case RAISED:
-			arm.rotate(-400);
+			arm.rotate(-500);
 			break;
 		case LOWERED:
 			return;
@@ -90,10 +79,8 @@ public class Arm {
 	}
 
 	public void drop() {
-		int x = 300;
-		if (this.armState != ArmState.RAISED) return;
-		arm.rotate(-x);
-		arm.rotate(x);
-		
+		lowerArm();
+		Main.getPilot().travel(-10);
+		raiseArm();
 	}
 }

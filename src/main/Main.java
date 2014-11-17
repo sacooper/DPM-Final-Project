@@ -19,6 +19,7 @@ import navigation.MovementController;
 import navigation.OdometryCorrection;
 import blocks.Arm;
 import blocks.BlockRescuer;
+import blocks.Arm.ArmState;
 
 /*****
  * Main class contianing all constants. Primary control of the robot occurs here.
@@ -50,7 +51,8 @@ public class Main {
 	public static final float	 
 		LEFT_WHEEL_D = 4.155f,
 		RIGHT_WHEEL_D = 4.155f,
-		WHEEL_BASE = 17.525f,
+//		WHEEL_BASE = 17.525f,
+		WHEEL_BASE = 17.575f,		
 		TILE_WIDTH = 30.48f;
 	
 	// TODO: Set to 12 for real maps
@@ -62,17 +64,16 @@ public class Main {
 	private static final BitSet[] maps;
 
 	private static final int NUM_MAPS = 6;
-	private static Waypoint pickup = new Waypoint(0, 0, 0);
 	private static Waypoint dropoff = new Waypoint(0, 0, 45);
 	
 	
 	private Main(){};
 	
 	
-	public static void block_search_test(String[] args){
+	public static void block_test(String[] args){
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		pilot.setAcceleration(2000);
+		pilot.setAcceleration(500);
 		pilot.setTravelSpeed(22);
 		pilot.setRotateSpeed(90);
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
@@ -80,10 +81,14 @@ public class Main {
 		display = new Display(odo);
 		display.start();
 		
-		arm = new Arm(ARM);
+		arm = new Arm(ARM, ArmState.RAISED);
 		blockRescuer = new BlockRescuer(pilot, odo, ULTRASONIC, arm);
 		Button.waitForAnyPress();
-		blockRescuer.rescueBlock();
+		arm.lowerArm();
+		pilot.travel(Main.TILE_WIDTH / 2f);
+		arm.raiseArm();
+		pilot.travel(Main.TILE_WIDTH);
+		arm.drop();
 
 		
 	}
@@ -171,12 +176,11 @@ public class Main {
 	}
 	
 	public static void main(String[] args) {
-		
 		// TODO: REMOVE
 		Button.waitForAnyPress();
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		pilot.setAcceleration(2000);
+		pilot.setAcceleration(500);
 		pilot.setTravelSpeed(22);
 		pilot.setRotateSpeed(90);
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
@@ -198,7 +202,6 @@ public class Main {
 
 		// Instantiate a new Arm for controlling claw movement
 		arm = new Arm(ARM, Arm.ArmState.RAISED);
-//		ARM.rotate(10);
 		
 		// Instantiate a new blockRescuer
 		blockRescuer = new BlockRescuer(pilot, odo, ULTRASONIC, arm);
@@ -219,7 +222,7 @@ public class Main {
 		
 		Display.setCurrentAction(Display.Action.MOVING);
 		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH/2f, Main.TILE_WIDTH, -90));
-		
+		                  
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		arm.drop();
 	}
