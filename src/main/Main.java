@@ -48,6 +48,7 @@ public class Main {
 	private static Display display;
 	private static OdometryCorrection odoCorrection;
 	private static Arm arm;
+	private static long start;		// TODO: INITIALIZE AND USE
 	
 	public static final float	 
 		LEFT_WHEEL_D = 4.155f,

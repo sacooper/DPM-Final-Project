@@ -52,7 +52,6 @@ public class Arm {
 	 * Raise the arm
 	 */
 	public void raiseArm(){
-		// TODO: Check constants for raiseArm()
 		switch(this.armState){
 		case RAISED:
 			return;
@@ -67,7 +66,6 @@ public class Arm {
 	 * Lower the arm
 	 */
 	public void lowerArm(){
-		// TODO: Check constants for lowerArm()
 		switch(this.armState){
 		case RAISED:
 			arm.rotate(-500);

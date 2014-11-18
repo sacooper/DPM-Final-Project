@@ -62,7 +62,6 @@ public class BlockRescuer {
 	 * @return The distance from the block
 	 */
 	private int searchForBlock(){
-		// TODO: FIND OPTIMAL ROTATE SPEED
 		int dist = 0;
 		int count = 0;
 		boolean foundBlock = false;
