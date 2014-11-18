@@ -15,7 +15,6 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
-import lejos.util.Delay;
 import localization.Localizer;
 import navigation.MovementController;
 import navigation.OdometryCorrection;
@@ -279,37 +278,76 @@ public class Main {
 		maps[5].set(3*Main.NUM_TILES + 2, true);	// (3,2)
 		////////////////////////////////
 
-	/**********************************************	
+	/**********************************************/
 		// The follow are for beta demonstrations
+		
+		// setBlock(map #, x, y)
+		
 		// Initialization of map 0
-		maps[0].set(7*Main.NUM_TILES + 0); // (7,0)
-		maps[0].set(4*Main.NUM_TILES + 1);	// (4,1)
-		maps[0].set(4*Main.NUM_TILES + 2);	// (4,2)
-		maps[0].set(4*Main.NUM_TILES + 3);	// (4,3)
-		maps[0].set(6*Main.NUM_TILES + 2);	// (6,2)
-		maps[0].set(7*Main.NUM_TILES + 2);	// (7,2)
-		maps[0].set(7*Main.NUM_TILES + 3);	// (7,3)
-		maps[0].set(0*Main.NUM_TILES + 5);	// (0,5)
-		maps[0].set(2*Main.NUM_TILES + 4);	// (2,4)
-		maps[0].set(3*Main.NUM_TILES + 5);	// (3,5)
-		maps[0].set(2*Main.NUM_TILES + 6);	// (2,6)
-		maps[0].set(2*Main.NUM_TILES + 7);	// (2,7)
-		maps[0].set(1*Main.NUM_TILES + 7);	// (1,7)
-		maps[0].set(6*Main.NUM_TILES + 5);	// (6,5)
-		maps[0].set(7*Main.NUM_TILES + 6);	// (7,6)
+		setBlock(0, 0, 5);
+		setBlock(0, 1, 7);
+		setBlock(0, 2, 4);
+		setBlock(0, 2, 6);
+		setBlock(0, 2, 7);
+		setBlock(0, 3, 5);
+		setBlock(0, 4, 1);
+		setBlock(0, 4, 2);
+		setBlock(0, 4, 3);
+		setBlock(0, 6, 2);
+		setBlock(0, 6, 5);
+		setBlock(0, 7, 0);
+		setBlock(0, 7, 2);
+		setBlock(0, 7, 3);
+		setBlock(0, 7, 6);
 		
 		// Initialization of map 1
+		setBlock(1, 0, 5);
+		setBlock(1, 1, 6);
+		setBlock(1, 2, 0);
+		setBlock(1, 2, 3);
+		setBlock(1, 2, 4);
+		setBlock(1, 3, 1);
+		setBlock(1, 3, 7);
+		setBlock(1, 4, 4);
+		setBlock(1, 4, 6);
+		setBlock(1, 4, 7);
+		setBlock(1, 5, 0);
+		setBlock(1, 7, 0);
+		setBlock(1, 7, 1);
+		setBlock(1, 7, 6);
+		setBlock(1, 7, 7);
 		
 		// Initialization of map 2
+		setBlock(2, 0, 7);
+		setBlock(2, 2, 3);
+		setBlock(2, 2, 6);
+		setBlock(2, 3, 2);
+		setBlock(2, 3, 3);
+		setBlock(2, 3, 4);
+		setBlock(2, 3, 6);
+		setBlock(2, 4, 0);
+		setBlock(2, 4, 7);
+		setBlock(2, 5, 0);
+		setBlock(2, 5, 5);
+		setBlock(2, 6, 4);
+		setBlock(2, 7, 0);
+		setBlock(2, 7, 4);
+		setBlock(2, 7, 6);
+		
 		
 		// Initialization of map 3
 		
 		// Initialization of map 4
 		
 		// Initialization of map 5
-	 **********************************************/
+	 /**********************************************/
 	}
 
+	private static void setBlock(int map, int x, int y){
+		if (maps==null) throw new RuntimeException("Maps not initialized");
+		
+		maps[map].set(x * Main.NUM_TILES + y);}
+	
 	public static DifferentialPilot getPilot() {
 		return pilot;
 	}
