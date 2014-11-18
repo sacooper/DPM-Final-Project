@@ -15,6 +15,8 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
+import lejos.robotics.pathfinding.Path;
+import lejos.util.Delay;
 import localization.Localizer;
 import navigation.MovementController;
 import navigation.OdometryCorrection;
@@ -54,19 +56,19 @@ public class Main {
 		LEFT_WHEEL_D = 4.155f,
 		RIGHT_WHEEL_D = 4.155f,
 //		WHEEL_BASE = 17.525f,
-		WHEEL_BASE = 17.575f,		
+		WHEEL_BASE = 17.725f,
+//		WHEEL_BASE = 17.625f,		
 		TILE_WIDTH = 30.48f;
 	
-	// TODO: Set to 12 for real maps
 	public static final int
-		NUM_TILES = 4;
+		NUM_TILES = 4;		// FIXME
 	
 	// List of maps for use in competition
 	// usage: maps[map_number][x][y]
 	private static final BitSet[] maps;
 
-	private static final int NUM_MAPS = 3;
-	private static int mapNumber = 0;
+	private static final int NUM_MAPS = 6;		// FIXME
+	private static int mapNumber = 5;
 	private static Waypoint dropoff = null;
 	
 	
@@ -119,42 +121,72 @@ public class Main {
 	}
 	
 	
-	
-	public static void odo_test(String[] args){
-
-
-		MOTOR_LEFT.setAcceleration(2000);
-		MOTOR_RIGHT.setAcceleration(2000);
-		// Instantiate a new DifferentialPilot to control movement
+	public static void main(String[] args){
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		pilot.setAcceleration(2000);
-		pilot.setTravelSpeed(24);
+		
+		pilot.setAcceleration(500);
+		pilot.setTravelSpeed(22);
+		pilot.setRotateSpeed(90);
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
 		
-		// Instantate a new OdometryCorrection and disable it
 		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
-		OdometryCorrection.disable();
-		odoCorrection.start();
 		
+		odoCorrection.start();
+	
 		display = new Display(odo);
 		display.start();
-		// Instantiate a new Localizer
-		localizer = new Localizer(pilot, ULTRASONIC, odo);
 		
-		// Instantiate a new Navigator to control movement
+		odo.setPose(new Pose(-15, -15, 0));
+		
 		nav = new Navigator(pilot, odo);
+		Button.waitForAnyPress();
+
+		OdometryCorrection.enable();
+		Delay.msDelay(1000);
 		
-		// Instantiate a new MovementController for travelling to waypoints
-		moveController = new MovementController(nav);
+		Path p = new Path();
+		p.add(new Waypoint(Main.TILE_WIDTH*1.5, -Main.TILE_WIDTH/2f));
+		p.add(new Waypoint(Main.TILE_WIDTH*1.5, Main.TILE_WIDTH*1.5));
+		p.add(new Waypoint(-Main.TILE_WIDTH/2f, Main.TILE_WIDTH*1.5));
+		p.add(new Waypoint(-15, -15));
+		
+		for (Waypoint w : p){
+			nav.goTo(w);
+			Button.waitForAnyPress();
+		}
+		
+		
+		
+	}
+
+	public static void odo_correction_test(String[] args){
+		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+		DifferentialPilot pilot2 = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+		
+		pilot.setAcceleration(500);
+		pilot.setTravelSpeed(22);
+		pilot.setRotateSpeed(90);
+		pilot2.setRotateSpeed(90);
+		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+		odo = new OdometryPoseProvider(pilot);
+		
+		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
+		
+		odoCorrection.start();
+	
+		display = new Display(odo);
+		display.start();
 		
 		Button.waitForAnyPress();
 		
-		OdometryCorrection.enable();
+		pilot2.rotate(20);
 
-		odo.setPose(new Pose(-15, -15, 90));
+		OdometryCorrection.enable();
+		Delay.msDelay(1000);
+		pilot.travel(Main.TILE_WIDTH*1.5f);
 		
-		pilot.travel(Main.TILE_WIDTH, false);
+		
 		
 	}
 	
@@ -178,8 +210,8 @@ public class Main {
 		
 	}
 	
-	public static void main(String[] args) {
-		setup();
+	public static void _main(String[] args) {
+//		setup();
 		Button.waitForAnyPress();
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
@@ -216,20 +248,22 @@ public class Main {
 		Display.setCurrentAction(Display.Action.LOCALIZING);
 		localizer.localize();
 		
-//		OdometryCorrection.enable();
+		OdometryCorrection.enable();
 		Display.setCurrentAction(Display.Action.MOVING);
-//		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
-		moveController.travelToTile(0, 2, -90);
+		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
+//		moveController.travelToTile(0, 2, -90);
 		pilot.travel(Main.TILE_WIDTH/2f);
 		
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		blockRescuer.rescueBlock();
 		
 		Display.setCurrentAction(Display.Action.MOVING);
-		moveController.travelToWaypoint(dropoff);
+//		moveController.travelToWaypoint(dropoff);
+		moveController.travelToTile(1, 2, -90);
+		pilot.travel(Main.TILE_WIDTH/4f);
 		                  
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-		arm.drop();
+		arm.drop();	
 	}
 
 	/****
@@ -263,7 +297,7 @@ public class Main {
 		
 		maps = new BitSet[Main.NUM_MAPS];
 		
-		for (int i = 0; i < 6; i++){
+		for (int i = 0; i < Main.NUM_MAPS; i++){
 			for (int x = 0; x < Main.NUM_TILES; x++){
 				for (int y = 0; y < Main.NUM_TILES; y++){
 					maps[i] = new BitSet(Main.NUM_TILES * Main.NUM_TILES);
@@ -277,9 +311,9 @@ public class Main {
 		maps[5].set(1*Main.NUM_TILES + 0, true);	// (1,0)
 		maps[5].set(2*Main.NUM_TILES + 2, true);	// (2,2)
 		maps[5].set(3*Main.NUM_TILES + 2, true);	// (3,2)
-		////////////////////////////////
+		//////////////////////////////
 
-	/**********************************************/
+	/**********************************************
 		// The follow are for beta demonstrations
 		
 		// setBlock(map #, x, y)
@@ -341,7 +375,7 @@ public class Main {
 		// Initialization of map 4
 		
 		// Initialization of map 5
-	 /**********************************************/
+	 **********************************************/
 	}
 
 	private static void setBlock(int map, int x, int y){
@@ -356,6 +390,7 @@ public class Main {
 	public static void setup(){
 		int x =0, y = 0, option;
 		do {
+			LCD.clear();
 			LCD.drawString("Map: " + mapNumber, 0, 0);
 			option = Button.waitForAnyPress();
 			switch (option){
@@ -367,6 +402,7 @@ public class Main {
 		} while (option != Button.ID_ENTER);
 		
 		do {
+			LCD.clear();
 			LCD.drawString("X: " + x, 0, 0);
 			option = Button.waitForAnyPress();
 			switch (option){
@@ -378,6 +414,7 @@ public class Main {
 		} while (option != Button.ID_ENTER);
 		
 		do {
+			LCD.clear();
 			LCD.drawString("Y: " + y, 0, 0);
 			option = Button.waitForAnyPress();
 			switch (option){

@@ -51,7 +51,7 @@ public class BlockRescuer {
 		arm.lowerArm();
 		pilot.travel(dist);
 		arm.raiseArm();
-//		OdometryCorrection.enable();
+		OdometryCorrection.enable();
 		pilot.setRotateSpeed(old_r);
 		pilot.setTravelSpeed(old_t);
 	}
