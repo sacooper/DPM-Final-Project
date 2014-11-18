@@ -25,7 +25,7 @@ public class Localizer {
 	private UltrasonicSensor us_scanner;
 	private DifferentialPilot pilot;	// Pilot controlling movement
 	private OdometryPoseProvider odo;
-	private static Pose startingPose;
+	private static Position startingPoint;
 	private BitSet map;
 	
 	/****
@@ -41,7 +41,7 @@ public class Localizer {
 		this.odo = odo;
 		this.us_scanner = us_scanner;
 		this.map = Main.getCurrentMap();
-		startingPose = null;
+		startingPoint = null;
 	}
 
 	/***
@@ -49,17 +49,8 @@ public class Localizer {
 	 * 
 	 * @return The starting pose or null if not yet determined
 	 */
-	public static synchronized Pose getStartingPose() {
-			return startingPose;}
-
-	/****
-	 * Set the starting pose. Note that this should only be used once during
-	 * any one run.
-	 * 
-	 * @param startingPose The new starting pose
-	 */
-	public static synchronized void setStartingPose(Pose startingPose) {
-			Localizer.startingPose = startingPose;}
+	public static synchronized Position getStartingPosition() {
+			return startingPoint;}
 	
 	private boolean isBlocked(Direction d, byte x, byte y){
 		switch(d){
@@ -165,7 +156,7 @@ public class Localizer {
 		if (possible.size() != 1)
 			throw new RuntimeException("No possible states");
 		
-		Position startingPoint = possible.get(0);
+		startingPoint = possible.get(0);
 //		Display.pause();
 //		LCD.clear();
 //		LCD.drawString(startingPoint.getX() + ", " + startingPoint.getY(), 0, 0);
@@ -189,6 +180,8 @@ public class Localizer {
 		}
 		
 		odo.setPose(new Pose(real_x * Main.TILE_WIDTH - Main.TILE_WIDTH /2f, real_y * Main.TILE_WIDTH - Main.TILE_WIDTH /2f, heading));
+		
+		Sound.beep();
 		return observations;	
 	}
 

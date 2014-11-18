@@ -2,8 +2,8 @@ package main;
 
 import lejos.nxt.LCD;
 import lejos.robotics.localization.PoseProvider;
-import lejos.robotics.navigation.Pose;
 import localization.Localizer;
+import localization.Position;
 
 /*****
  * Display to print current heading of the robot. 
@@ -46,7 +46,7 @@ public class Display extends Thread {
 				LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2) + posStr, 0, 1);
 				LCD.drawString("H: " + Display.formattedDoubleToString(h, 2) + posStr, 0, 2);
 				LCD.drawString(currentActionAsString(), 0, 3);
-				LCD.drawString("Start: " + startingPoseAsString(), 0, 4);
+				LCD.drawString("Start: " + startingPointAsString(), 0, 4);
 			}
 			try{
 				Thread.sleep(DELAY);
@@ -122,17 +122,22 @@ public class Display extends Thread {
 		}
 	}
 	
-	private static String startingPoseAsString(){
-		Pose current;
-
-		current = Localizer.getStartingPose();
+	public static String startingPointAsString(){
+		Position current;
+		String heading = "";
+		current = Localizer.getStartingPosition();
 		if (current == null) return "";
 		
-		String x = formattedDoubleToString(current.getX(), 2),
-			   y = formattedDoubleToString(current.getX(), 2),
-			   t = formattedDoubleToString(current.getX(), 2);
+		switch (current.getDir()){
+		case UP: heading = "0";break;
+		case DOWN: heading = "180";break;
+		case LEFT: heading = "90"; break;
+		case RIGHT: heading = "270"; break; 
+		}
+		String x = formattedDoubleToString(current.getX()*Main.TILE_WIDTH - Main.TILE_WIDTH/2f, 2),
+			   y = formattedDoubleToString(current.getY()*Main.TILE_WIDTH - Main.TILE_WIDTH/2f, 2);
 		
-		return "("+ x + ", " + y + ", " + t + ")";
+		return "("+ x + ", " + y + ", " + heading + ")";
 	}
 	
 	public static void printLocation(float x, float y, float h){
