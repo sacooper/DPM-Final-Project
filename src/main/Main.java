@@ -61,14 +61,14 @@ public class Main {
 		TILE_WIDTH = 30.48f;
 	
 	public static final int
-		NUM_TILES = 4;		// FIXME
+		NUM_TILES = 8;		// FIXME
 	
 	// List of maps for use in competition
 	// usage: maps[map_number][x][y]
 	private static final BitSet[] maps;
 
-	private static final int NUM_MAPS = 6;		// FIXME
-	private static int mapNumber = 5;
+	private static final int NUM_MAPS = 3;		// FIXME
+	private static int mapNumber = 0;
 	private static Waypoint dropoff = null;
 	
 	
@@ -121,7 +121,7 @@ public class Main {
 	}
 	
 	
-	public static void main(String[] args){
+	public static void odo_test_2(String[] args){
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
 		
 		pilot.setAcceleration(500);
@@ -149,7 +149,7 @@ public class Main {
 		p.add(new Waypoint(Main.TILE_WIDTH*1.5, -Main.TILE_WIDTH/2f));
 		p.add(new Waypoint(Main.TILE_WIDTH*1.5, Main.TILE_WIDTH*1.5));
 		p.add(new Waypoint(-Main.TILE_WIDTH/2f, Main.TILE_WIDTH*1.5));
-		p.add(new Waypoint(-15, -15));
+		p.add(new Waypoint(-Main.TILE_WIDTH/2f, -Main.TILE_WIDTH/2f));
 		
 		for (Waypoint w : p){
 			nav.goTo(w);
@@ -210,8 +210,18 @@ public class Main {
 		
 	}
 	
-	public static void _main(String[] args) {
-//		setup();
+	public static void main(String[] args) {
+		setup();
+		
+		LCD.clear();
+		for (int x = 0; x < Main.NUM_TILES; x++){
+			for (int y = 0; y < Main.NUM_TILES; y++){
+				if (getCurrentMap().get(x * Main.NUM_TILES + y))
+					LCD.drawChar('X', x, 7-y);
+			}
+		}
+		
+		
 		Button.waitForAnyPress();
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
@@ -251,16 +261,16 @@ public class Main {
 		OdometryCorrection.enable();
 		Display.setCurrentAction(Display.Action.MOVING);
 		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
-//		moveController.travelToTile(0, 2, -90);
-		pilot.travel(Main.TILE_WIDTH/2f);
+		moveController.travelToTile(0, 2, -90);
+//		pilot.travel(Main.TILE_WIDTH/2f);
 		
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		blockRescuer.rescueBlock();
 		
 		Display.setCurrentAction(Display.Action.MOVING);
-//		moveController.travelToWaypoint(dropoff);
-		moveController.travelToTile(1, 2, -90);
-		pilot.travel(Main.TILE_WIDTH/4f);
+		moveController.travelToWaypoint(dropoff);
+//		moveController.travelToTile(1, 2, -90);
+		pilot.travel(-Main.TILE_WIDTH/2f);
 		                  
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		arm.drop();	
@@ -307,13 +317,13 @@ public class Main {
 		// TODO: Initialization of maps
 		
 		// The following is from Lab 5 :
-		maps[5].set(0*Main.NUM_TILES + 3, true);	// (0,3)
-		maps[5].set(1*Main.NUM_TILES + 0, true);	// (1,0)
-		maps[5].set(2*Main.NUM_TILES + 2, true);	// (2,2)
-		maps[5].set(3*Main.NUM_TILES + 2, true);	// (3,2)
+//		maps[5].set(0*Main.NUM_TILES + 3, true);	// (0,3)
+//		maps[5].set(1*Main.NUM_TILES + 0, true);	// (1,0)
+//		maps[5].set(2*Main.NUM_TILES + 2, true);	// (2,2)
+//		maps[5].set(3*Main.NUM_TILES + 2, true);	// (3,2)
 		//////////////////////////////
 
-	/**********************************************
+	/**********************************************/
 		// The follow are for beta demonstrations
 		
 		// setBlock(map #, x, y)
@@ -375,7 +385,7 @@ public class Main {
 		// Initialization of map 4
 		
 		// Initialization of map 5
-	 **********************************************/
+	 /**********************************************/
 	}
 
 	private static void setBlock(int map, int x, int y){
