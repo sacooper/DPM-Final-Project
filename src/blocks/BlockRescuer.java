@@ -15,7 +15,6 @@ import navigation.OdometryCorrection;
  */
 public class BlockRescuer {	
 	private DifferentialPilot pilot;
-	private final double WIDTH = Main.TILE_WIDTH, HEIGHT = 2 * Main.TILE_WIDTH;
 	private final int THRESHOLD = 2, SWEEP = 35;
 	private UltrasonicSensor us;
 	private OdometryPoseProvider odo;
@@ -67,26 +66,50 @@ public class BlockRescuer {
 		int dist = 0;
 		int count = 0;
 		boolean foundBlock = false;
-		while (!foundBlock && count < HEIGHT/(Main.TILE_WIDTH / 3f)){
-			pilot.rotate(SWEEP);
-			int lastDistance = getFilteredData();
-			int current = lastDistance;
-			pilot.rotate(-2 * SWEEP, true);
-			while(pilot.isMoving()){
-				current = getFilteredData();
-				if (lastDistance - current > THRESHOLD){
-					// FOUND BLOCK
-					pilot.stop();
-					foundBlock = true;
-					dist = current;
-					break;
+		byte tryCount = 0;
+		while (!foundBlock){
+			if (tryCount < 2){
+				while (!foundBlock && count < 4) {
+					pilot.rotate(SWEEP);
+					int lastDistance = getFilteredData();
+					int current = lastDistance;
+					pilot.rotate(-2 * SWEEP, true);
+					while(pilot.isMoving()){
+						current = getFilteredData();
+						if (lastDistance - current > THRESHOLD){
+							// FOUND BLOCK
+							pilot.stop();
+							foundBlock = true;
+							dist = current;
+							break;
+						}
+						lastDistance = current;
+					}
+					if (foundBlock) break;
+					count++;
+					pilot.rotate(SWEEP);
+					pilot.travel(Main.TILE_WIDTH/3f);
 				}
-				lastDistance = current;
 			}
-			if (foundBlock) break;
-			count++;
-			pilot.rotate(SWEEP);
-			pilot.travel(Main.TILE_WIDTH/3f);
+			if (foundBlock)	break;
+			
+			tryCount++;
+			if (tryCount < 2){
+				pilot.travel(-count * Main.TILE_WIDTH);
+				pilot.rotate(-90);
+				pilot.travel(Main.TILE_WIDTH);
+				pilot.rotate(90);
+				count = 0;}
+			else{
+				pilot.travel(-count * Main.TILE_WIDTH);
+				pilot.rotate(90);
+				pilot.travel(Main.TILE_WIDTH/2f);
+				pilot.rotate(-90);
+				pilot.travel(Main.TILE_WIDTH*1.5f);
+				pilot.travel(-10);
+				return 5;
+			}
+			
 		}
 		pilot.rotate(-15);
 		pilot.travel(-15);

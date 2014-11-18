@@ -5,6 +5,7 @@ import java.util.BitSet;
 import lejos.nxt.Button;
 import lejos.nxt.ButtonListener;
 import lejos.nxt.ColorSensor;
+import lejos.nxt.LCD;
 import lejos.nxt.Motor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
@@ -14,12 +15,13 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
+import lejos.util.Delay;
 import localization.Localizer;
 import navigation.MovementController;
 import navigation.OdometryCorrection;
 import blocks.Arm;
-import blocks.BlockRescuer;
 import blocks.Arm.ArmState;
+import blocks.BlockRescuer;
 
 /*****
  * Main class contianing all constants. Primary control of the robot occurs here.
@@ -63,8 +65,9 @@ public class Main {
 	// usage: maps[map_number][x][y]
 	private static final BitSet[] maps;
 
-	private static final int NUM_MAPS = 6;
-	private static Waypoint dropoff = new Waypoint(0, 0, 45);
+	private static final int NUM_MAPS = 3;
+	private static int mapNumber = 0;
+	private static Waypoint dropoff = null;
 	
 	
 	private Main(){};
@@ -176,7 +179,7 @@ public class Main {
 	}
 	
 	public static void main(String[] args) {
-		// TODO: REMOVE
+		setup();
 		Button.waitForAnyPress();
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
@@ -215,13 +218,15 @@ public class Main {
 		
 //		OdometryCorrection.enable();
 		Display.setCurrentAction(Display.Action.MOVING);
-		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
+//		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
+		moveController.travelToTile(0, 2, -90);
+		pilot.travel(Main.TILE_WIDTH/2f);
 		
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		blockRescuer.rescueBlock();
 		
 		Display.setCurrentAction(Display.Action.MOVING);
-		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH/2f, Main.TILE_WIDTH, -90));
+		moveController.travelToWaypoint(dropoff);
 		                  
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		arm.drop();
@@ -233,8 +238,7 @@ public class Main {
 	 * @return the current map number
 	 */
 	public static int getMapNumber() {
-		return 5;
-	}
+		return mapNumber;}
 	
 	/****
 	 * Get the current map as a 2-D array of booleans where TRUE represents that tile
@@ -278,7 +282,7 @@ public class Main {
 	/**********************************************	
 		// The follow are for beta demonstrations
 		// Initialization of map 0
-		maps[0].set(7 * Main.NUM_MAPS + 0); // (7,0)
+		maps[0].set(7*Main.NUM_TILES + 0); // (7,0)
 		maps[0].set(4*Main.NUM_TILES + 1);	// (4,1)
 		maps[0].set(4*Main.NUM_TILES + 2);	// (4,2)
 		maps[0].set(4*Main.NUM_TILES + 3);	// (4,3)
@@ -310,4 +314,43 @@ public class Main {
 		return pilot;
 	}
 	
+	public static void setup(){
+		int x =0, y = 0, option;
+		do {
+			LCD.drawString("Map: " + mapNumber, 0, 0);
+			option = Button.waitForAnyPress();
+			switch (option){
+			case Button.ID_LEFT: mapNumber = (mapNumber + (Main.NUM_MAPS - 1)) % Main.NUM_MAPS; break;
+			case Button.ID_RIGHT: mapNumber = (mapNumber + 1) % Main.NUM_MAPS; break;
+			default: break;
+			}
+			
+		} while (option != Button.ID_ENTER);
+		
+		do {
+			LCD.drawString("X: " + x, 0, 0);
+			option = Button.waitForAnyPress();
+			switch (option){
+			case Button.ID_LEFT: x = (x + (Main.NUM_TILES - 1)) % Main.NUM_TILES; break;
+			case Button.ID_RIGHT: x = (x + 1) % Main.NUM_TILES; break;
+			default: break;
+			}
+			
+		} while (option != Button.ID_ENTER);
+		
+		do {
+			LCD.drawString("Y: " + y, 0, 0);
+			option = Button.waitForAnyPress();
+			switch (option){
+			case Button.ID_LEFT: y = (y + (Main.NUM_TILES - 1)) % Main.NUM_TILES; break;
+			case Button.ID_RIGHT: y = (y + 1) % Main.NUM_TILES; break;
+			default: break;
+			}
+			
+		} while (option != Button.ID_ENTER);
+		
+		dropoff = new Waypoint(x, y, 45);
+		
+		
+	}
 }

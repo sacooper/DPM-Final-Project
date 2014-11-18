@@ -176,7 +176,7 @@ public class MovementController{
 		pathFinder = new NodePathFinder(new AstarSearchAlgorithm(), grid);
 	}
 	
-	private static float coordAsTile(double c){
+	private static int coordAsTile(double c){
 		return (int)((c + Main.TILE_WIDTH/1.5f) / Main.TILE_WIDTH);
 	}
 	
@@ -186,22 +186,25 @@ public class MovementController{
 	 * @param w The destination waypoint
 	 */
 	public void travelToWaypoint(Waypoint w) {
+		travelToTile(coordAsTile(w.getX()), coordAsTile(w.getY()));
+		nav.goTo(w);
+		nav.waitForStop();
+		nav.rotateTo(w.getHeading());
+		nav.waitForStop();
+	}
+
+	public void travelToTile(int x, int y){
 		nav.stop();
 		nav.clearPath();
 		Path p;
 		
 		Pose me = nav.getPoseProvider().getPose();
 		Pose tile = new Pose(coordAsTile(me.getX()), coordAsTile(me.getY()), me.getHeading());
-//		throw new RuntimeException(tile.getX() + " " + tile.getY() + " " + tile.getHeading());
-		Waypoint dest = new Waypoint(coordAsTile(w.getX()), coordAsTile(w.getY()));
-//		throw new RuntimeException(dest.getX() + " " + dest.getY() + " " + dest.getHeading());
+		Waypoint dest = new Waypoint(x, y);
 		try {
 			p = pathFinder.findRoute(tile, dest);
 		} catch (DestinationUnreachableException e) {
-			String x = Display.formattedDoubleToString(w.getX(), 1),
-				   y = Display.formattedDoubleToString(w.getY(), 1),
-				   t = Display.formattedDoubleToString(w.getHeading(), 1);
-			throw new RuntimeException(x + ", " + y + ", " + t);
+			throw new RuntimeException("Destination Unreachable");
 		}
 
 		for (Waypoint way : p){
@@ -212,9 +215,10 @@ public class MovementController{
 		nav.singleStep(false);
 		nav.followPath(p);
 		nav.waitForStop();
-		nav.goTo(w);
-		nav.waitForStop();
-		nav.rotateTo(w.getHeading());
-		nav.waitForStop();
 	}
+	
+	public void travelToTile(int x, int y, float k) {
+		travelToTile(x, y);
+		nav.rotateTo(k);
+		nav.waitForStop();}
 }
