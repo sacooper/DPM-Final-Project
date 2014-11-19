@@ -25,7 +25,7 @@ import blocks.Arm.ArmState;
 import blocks.BlockRescuer;
 
 /*****
- * Main class contianing all constants. Primary control of the robot occurs here.
+ * Main class containing all constants. Primary control of the robot occurs here.
  * 
  * @author Scott Cooper
  *
@@ -56,8 +56,7 @@ public class Main {
 		LEFT_WHEEL_D = 4.155f,
 		RIGHT_WHEEL_D = 4.155f,
 //		WHEEL_BASE = 17.525f,
-		WHEEL_BASE = 17.725f,
-//		WHEEL_BASE = 17.625f,		
+		WHEEL_BASE = 17.85f,		
 		TILE_WIDTH = 30.48f;
 	
 	public static final int
@@ -74,6 +73,30 @@ public class Main {
 	
 	private Main(){};
 	
+	public static void arm_lock_test(String[] args){
+		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+		pilot.setAcceleration(500);
+		pilot.setTravelSpeed(22);
+		pilot.setRotateSpeed(90);
+		ARM.stop(true);
+		Button.waitForAnyPress();
+		pilot.travel(Main.TILE_WIDTH);
+		pilot.travel(-Main.TILE_WIDTH);
+		pilot.travel(Main.TILE_WIDTH);
+		pilot.travel(-Main.TILE_WIDTH);
+		pilot.travel(Main.TILE_WIDTH);
+		pilot.travel(-Main.TILE_WIDTH);
+		pilot.travel(Main.TILE_WIDTH);
+		pilot.travel(-Main.TILE_WIDTH);
+		pilot.travel(Main.TILE_WIDTH);
+		pilot.travel(-Main.TILE_WIDTH);
+		pilot.travel(Main.TILE_WIDTH);
+		pilot.travel(-Main.TILE_WIDTH);
+		pilot.travel(Main.TILE_WIDTH);
+		pilot.travel(-Main.TILE_WIDTH);
+		pilot.travel(Main.TILE_WIDTH);
+		pilot.travel(-Main.TILE_WIDTH);
+	}
 	
 	public static void block_test(String[] args){
 		// Instantiate a new DifferentialPilot to control movement
@@ -83,19 +106,14 @@ public class Main {
 		pilot.setRotateSpeed(90);
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
-		display = new Display(odo);
-		display.start();
-		
+		odo.setPose(new Pose(0, 0, -90));
+		nav = new Navigator(pilot, odo);
 		arm = new Arm(ARM, ArmState.RAISED);
-		blockRescuer = new BlockRescuer(pilot, odo, ULTRASONIC, arm);
+		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
 		Button.waitForAnyPress();
-		arm.lowerArm();
-		pilot.travel(Main.TILE_WIDTH / 2f);
-		arm.raiseArm();
+		blockRescuer.rescueBlock();
 		pilot.travel(Main.TILE_WIDTH);
-		arm.drop();
-
-		
+		arm.drop();		
 	}
 	
 	public static void localizer_test(String[] args){
@@ -111,7 +129,7 @@ public class Main {
 		
 		localizer = new Localizer(pilot, ULTRASONIC, odo);
 		arm = new Arm(ARM);
-		blockRescuer = new BlockRescuer(pilot, odo, ULTRASONIC, arm);
+		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
 		Button.waitForAnyPress();
 		
 		localizer.localize();
@@ -211,13 +229,15 @@ public class Main {
 	}
 	
 	public static void main(String[] args) {
+		ARM.stop(true);
 		setup();
 		
 		LCD.clear();
+		
 		for (int x = 0; x < Main.NUM_TILES; x++){
 			for (int y = 0; y < Main.NUM_TILES; y++){
 				if (getCurrentMap().get(x * Main.NUM_TILES + y))
-					LCD.drawChar('X', x, 7-y);
+					LCD.drawChar('X', x, Main.NUM_TILES - 1 - y);
 			}
 		}
 		
@@ -249,7 +269,7 @@ public class Main {
 		arm = new Arm(ARM, Arm.ArmState.RAISED);
 		
 		// Instantiate a new blockRescuer
-		blockRescuer = new BlockRescuer(pilot, odo, ULTRASONIC, arm);
+		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
 		
 		OdometryCorrection.disable();
 		odoCorrection.start();
@@ -260,20 +280,20 @@ public class Main {
 		
 		OdometryCorrection.enable();
 		Display.setCurrentAction(Display.Action.MOVING);
-		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
-		moveController.travelToTile(0, 2, -90);
-//		pilot.travel(Main.TILE_WIDTH/2f);
+//		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
+		moveController.travelToTile(1, 2, -90);
+		pilot.travel(Main.TILE_WIDTH/2f);
 		
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		blockRescuer.rescueBlock();
 		
 		Display.setCurrentAction(Display.Action.MOVING);
-		moveController.travelToWaypoint(dropoff);
+		moveController.travelToTile((int)dropoff.getX(), (int)dropoff.getY(), (float)dropoff.getHeading());
 //		moveController.travelToTile(1, 2, -90);
 		pilot.travel(-Main.TILE_WIDTH/2f);
 		                  
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-		arm.drop();	
+		arm.drop();
 	}
 
 	/****
@@ -312,17 +332,15 @@ public class Main {
 				for (int y = 0; y < Main.NUM_TILES; y++){
 					maps[i] = new BitSet(Main.NUM_TILES * Main.NUM_TILES);
 					maps[i].clear();}}}
-		
-		
-		// TODO: Initialization of maps
-		
+	
+	/**********************************************
 		// The following is from Lab 5 :
-//		maps[5].set(0*Main.NUM_TILES + 3, true);	// (0,3)
-//		maps[5].set(1*Main.NUM_TILES + 0, true);	// (1,0)
-//		maps[5].set(2*Main.NUM_TILES + 2, true);	// (2,2)
-//		maps[5].set(3*Main.NUM_TILES + 2, true);	// (3,2)
+		maps[0].set(0*Main.NUM_TILES + 3, true);	// (0,3)
+		maps[0].set(1*Main.NUM_TILES + 0, true);	// (1,0)
+		maps[0].set(2*Main.NUM_TILES + 2, true);	// (2,2)
+		maps[0].set(3*Main.NUM_TILES + 2, true);	// (3,2)
 		//////////////////////////////
-
+	************************************************/
 	/**********************************************/
 		// The follow are for beta demonstrations
 		
@@ -435,8 +453,23 @@ public class Main {
 			
 		} while (option != Button.ID_ENTER);
 		
-		dropoff = new Waypoint(x, y, 45);
+		int ang = 0;
 		
+		if (x-1 >= 0 && !maps[mapNumber].get((x-1)*Main.NUM_TILES + y))
+			ang = 0;
+		else if (x + 1 < Main.NUM_TILES && !maps[mapNumber].get((x+1)*Main.NUM_TILES + y))
+			ang = 180;
+		else if (y - 1 >= 0 && !maps[mapNumber].get(x*Main.NUM_TILES + y - 1))
+			ang = 90;
+		else
+			ang = -90;
 		
+		dropoff = new Waypoint(x, y, ang);
+		
+	}
+
+
+	public static Navigator getNav() {
+		return nav;
 	}
 }

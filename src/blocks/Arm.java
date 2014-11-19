@@ -78,7 +78,18 @@ public class Arm {
 
 	public void drop() {
 		lowerArm();
-		Main.getPilot().travel(-10);
+		Main.getPilot().travel(-Main.TILE_WIDTH/2f);
 		raiseArm();
+	}
+	
+	public void raise_with_rev(){
+		switch (this.armState){
+		case RAISED: throw new RuntimeException("Can't raise arm");
+		case LOWERED:
+			arm.rotate(200);
+			Main.getPilot().travel(-10);
+			arm.rotate(300);
+		}
+		armState = ArmState.RAISED;
 	}
 }
