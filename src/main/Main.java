@@ -229,7 +229,6 @@ public class Main {
 	}
 	
 	public static void main(String[] args) {
-		ARM.stop(true);
 		setup();
 		
 		LCD.clear();

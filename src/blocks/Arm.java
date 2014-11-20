@@ -1,7 +1,6 @@
 package blocks;
 
 import lejos.nxt.NXTRegulatedMotor;
-import lejos.robotics.navigation.DifferentialPilot;
 import main.Main;
 
 /*****
@@ -46,6 +45,7 @@ public class Arm {
 	public Arm(NXTRegulatedMotor arm, ArmState armState){
 		this.arm = arm;
 		this.armState = armState;
+		this.arm.stop(true);
 	}
 	
 	/****
