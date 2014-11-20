@@ -110,6 +110,8 @@ public class Localizer {
 	 * @return Number of observations made
 	 */
 	public int localize() {
+		ArrayList<Position> seen = new ArrayList<Position>();
+		
 		ArrayList<Position> possible = generatePossibleStates();
 		// Current direction relative to where we started
 		Direction current = Direction.UP;	
@@ -117,6 +119,7 @@ public class Localizer {
 		int x = 0, y = 0, observations = 0;	
 		
 		while (possible.size() > 1) { // Narrow down list of states until we know where we started
+			seen.add(new Position(x, y, null, false));
 			boolean isBlocked = true;
 			for (byte i = 0; i < 4 && possible.size() > 1; i++){
 				isBlocked = getFilteredData() < (Main.TILE_WIDTH);
@@ -132,23 +135,30 @@ public class Localizer {
 					current = Position.rotateRight(current);}
 			}
 			
-			
-			
-//			isBlocked = getFilteredData() < (Main.TILE_WIDTH);
-			while (isBlocked){
-				pilot.rotate(-90, false);
-				current = Position.rotateRight(current);
-				isBlocked = getFilteredData() < Main.TILE_WIDTH;
-			}
-			
+		
 			if (possible.size() > 1){
-				pilot.travel(Main.TILE_WIDTH);
-				switch(current){
-				case DOWN: y--; break;
-				case LEFT: x--; break;
-				case RIGHT: x++; break;
-				case UP: y++; break;
-				default: throw new RuntimeException("Shouldn't Happen");}
+				boolean foundNewSpot = false;
+				
+				while (!foundNewSpot){
+					int checkCount = 0;
+					while (isBlocked && !contains(seen, forward(new Position(x, y, null, false))) && ++checkCount < 4){
+						pilot.rotate(-90, false);
+						current = Position.rotateRight(current);
+						isBlocked = getFilteredData() < Main.TILE_WIDTH;
+					}
+				
+					pilot.travel(Main.TILE_WIDTH);
+					switch(current){
+					case DOWN: y--; break;
+					case LEFT: x--; break;
+					case RIGHT: x++; break;
+					case UP: y++; break;
+					default: throw new RuntimeException("Shouldn't Happen");
+					}
+					
+					if (!contains(seen, new Position(x, y, null, false)))
+						foundNewSpot = true;
+				}
 			lejos.util.Delay.msDelay(300);
 			}	
 		}
@@ -229,6 +239,23 @@ public class Localizer {
 			else
 				return (x < (Main.NUM_TILES - 1) && !map.get((x+1)*Main.NUM_TILES + y));}
 		return true;
+	}
+	
+	private static Position forward(Position p){
+		switch(p.getDir()){
+		case DOWN: return new Position(p.getX(), p.getY() - 1, null, false);
+		case LEFT: return new Position(p.getX() - 1, p.getY(), null, false);
+		case RIGHT: return new Position(p.getX() + 1, p.getY(), null, false);
+		case UP: return new Position(p.getX(), p.getY() + 1, null, false);
+		default: throw new RuntimeException("Invalid direction in Localizer.forward()");
+		}
+	}
+	
+	private static boolean contains(ArrayList<Position> seen, Position p){
+		for (Position q : seen)
+			if (q.getX() == p.getX() && q.getY() == p.getY())
+				return true;
+		return false;
 	}
 	
 }

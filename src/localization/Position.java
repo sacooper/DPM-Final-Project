@@ -155,4 +155,13 @@ public class Position {
 		default:
 			throw new RuntimeException("Shouldn't happen");}
 	}
+	
+	@Override
+	public boolean equals(Object o){
+		if (o instanceof Position){
+			Position p = (Position)o;
+			return p.getDir() == this.getDir() && p.getX() == this.x && p.getY() == this.y && p.isBlocked() == this.isBlocked;
+		} else return false;
+		
+	}
 }
