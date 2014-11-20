@@ -124,20 +124,10 @@ public class Display extends Thread {
 	
 	public static String startingPointAsString(){
 		Position current;
-		String heading = "";
 		current = Localizer.getStartingPosition();
 		if (current == null) return "";
 		
-		switch (current.getDir()){
-		case UP: heading = "0";break;
-		case DOWN: heading = "180";break;
-		case LEFT: heading = "90"; break;
-		case RIGHT: heading = "270"; break; 
-		}
-		String x = formattedDoubleToString(current.getX()*Main.TILE_WIDTH - Main.TILE_WIDTH/2f, 2),
-			   y = formattedDoubleToString(current.getY()*Main.TILE_WIDTH - Main.TILE_WIDTH/2f, 2);
-		
-		return "("+ x + ", " + y + ", " + heading + ")";
+		return current.getX() + " " + current.getY() + " " + current.getDir().asCardinal();
 	}
 	
 	public static void printLocation(float x, float y, float h){

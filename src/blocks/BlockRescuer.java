@@ -1,8 +1,6 @@
 package blocks;
 
-import lejos.nxt.LCD;
 import lejos.nxt.UltrasonicSensor;
-import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
 import main.Main;
 import navigation.OdometryCorrection;
@@ -17,9 +15,7 @@ public class BlockRescuer {
 	private DifferentialPilot pilot;
 	private final int THRESHOLD = 2, SWEEP = 35;
 	private UltrasonicSensor us;
-	private OdometryPoseProvider odo;
 	private Arm arm;
-	
 	/*****
 	 * Instantiate a new BlockRescuer with the following paramaters
 	 * 
@@ -27,10 +23,9 @@ public class BlockRescuer {
 	 * @param us The <code>UltrasonicSensor</code> to use for detecting a block
 	 * @param arm The <code>Arm</code> that controls the claw
 	 */
-	public BlockRescuer(DifferentialPilot pilot, OdometryPoseProvider odo, UltrasonicSensor us, Arm arm){
+	public BlockRescuer(DifferentialPilot pilot, UltrasonicSensor us, Arm arm){
 		this.pilot = pilot;
 		this.us = us;
-		this.odo = odo;
 		this.arm = arm;
 	}
 	
@@ -50,7 +45,7 @@ public class BlockRescuer {
 		// Stage 2: Pick up block
 		arm.lowerArm();
 		pilot.travel(dist);
-		arm.raiseArm();
+		arm.raise_with_rev();
 		OdometryCorrection.enable();
 		pilot.setRotateSpeed(old_r);
 		pilot.setTravelSpeed(old_t);
@@ -68,15 +63,16 @@ public class BlockRescuer {
 		byte tryCount = 0;
 		while (!foundBlock){
 			if (tryCount < 2){
-				while (!foundBlock && count < 4) {
+				while (!foundBlock && count < 6) {
 					pilot.rotate(SWEEP);
 					int lastDistance = getFilteredData();
 					int current = lastDistance;
-					pilot.rotate(-2 * SWEEP, true);
-					while(pilot.isMoving()){
+					int ang = 0;
+					while(ang < SWEEP*2){
+						pilot.rotate(-5);
+						ang += 5;
 						current = getFilteredData();
-						if (lastDistance - current > THRESHOLD){
-							// FOUND BLOCK
+						if (lastDistance - current > THRESHOLD || current < 6){
 							pilot.stop();
 							foundBlock = true;
 							dist = current;
@@ -87,32 +83,31 @@ public class BlockRescuer {
 					if (foundBlock) break;
 					count++;
 					pilot.rotate(SWEEP);
-					pilot.travel(Main.TILE_WIDTH/3f);
+					pilot.travel(Main.TILE_WIDTH/4f);
 				}
 			}
 			if (foundBlock)	break;
 			
 			tryCount++;
 			if (tryCount < 2){
-				pilot.travel(-count * Main.TILE_WIDTH);
+				pilot.travel(-count * Main.TILE_WIDTH/4f);
 				pilot.rotate(-90);
 				pilot.travel(Main.TILE_WIDTH);
 				pilot.rotate(90);
 				count = 0;}
 			else{
-				pilot.travel(-count * Main.TILE_WIDTH);
+				pilot.travel(-count * Main.TILE_WIDTH/4f);
 				pilot.rotate(90);
 				pilot.travel(Main.TILE_WIDTH/2f);
 				pilot.rotate(-90);
-				pilot.travel(Main.TILE_WIDTH*1.5f);
-				pilot.travel(-10);
-				return 5;
+				return (int) (Main.TILE_WIDTH*1.5f);
 			}
 			
 		}
 		pilot.rotate(-15);
-		pilot.travel(-15);
-		return dist+7;
+		Main.getNav().rotateTo(Math.round(Main.getNav().getPoseProvider().getPose().getHeading() / 90f) * 90f);
+		pilot.travel(-24);
+		return dist + 13;
 	}
 
 	/*******
@@ -125,7 +120,6 @@ public class BlockRescuer {
 		int dist;
 		// there will be a delay here
 		dist = us.getDistance();
-		
 		return (int) Math.min(dist, Main.TILE_WIDTH*.75);
 	}
 }
