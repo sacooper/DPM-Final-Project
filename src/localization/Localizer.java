@@ -141,7 +141,7 @@ public class Localizer {
 				
 				while (!foundNewSpot){
 					int checkCount = 0;
-					while (isBlocked && !contains(seen, forward(new Position(x, y, null, false))) && ++checkCount < 4){
+					while (isBlocked && !contains(seen, forward(new Position(x, y, current, false))) && ++checkCount < 4){
 						pilot.rotate(-90, false);
 						current = Position.rotateRight(current);
 						isBlocked = getFilteredData() < Main.TILE_WIDTH;
