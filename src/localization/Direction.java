@@ -10,16 +10,16 @@ package localization;
 public enum Direction {
 	// 4 possible directions
 	
-	/** UP relative to the start */
+	/** UP relative to the starting direction */
 	UP(0), 
 	
-	/** LEFT relative to the start */
+	/** LEFT relative to the starting direction */
 	LEFT(1), 
 	
-	/** RIGHT relative to the start */
+	/** RIGHT relative to the starting direction */
 	RIGHT(3), 
 	
-	/** DOWN relative to the start */
+	/** DOWN relative to the starting direction */
 	DOWN(2);	
 	public final int v;					// # of left turns from up
 	private Direction(int i){ v = i; }	// Direction constructor

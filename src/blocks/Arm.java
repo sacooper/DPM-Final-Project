@@ -76,12 +76,27 @@ public class Arm {
 		this.armState = ArmState.LOWERED;
 	}
 
+	/***
+	 * Drop the block. If the arm is not
+	 * currently raised, a RuntimeException is thrown
+	 */
 	public void drop() {
-		lowerArm();
-		Main.getPilot().travel(-Main.TILE_WIDTH/2f);
-		raiseArm();
+		switch(this.armState){
+		case RAISED:
+			lowerArm();
+			Main.getPilot().travel(-Main.TILE_WIDTH/2f);
+			raiseArm();
+			break;
+		case LOWERED:
+			throw new RuntimeException("Can't drop block");
+		}
+		this.armState = ArmState.RAISED;
 	}
 	
+	/***
+	 * Raise the arm while reversing. If the arm is not currently lowered,
+	 * a RuntimeException is thrown
+	 */
 	public void raise_with_rev(){
 		switch (this.armState){
 		case RAISED: throw new RuntimeException("Can't raise arm");
@@ -89,6 +104,7 @@ public class Arm {
 			arm.rotate(200);
 			Main.getPilot().travel(-10);
 			arm.rotate(300);
+			break;
 		}
 		armState = ArmState.RAISED;
 	}

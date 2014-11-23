@@ -14,7 +14,6 @@ import lejos.robotics.pathfinding.Node;
 import lejos.robotics.pathfinding.NodePathFinder;
 import lejos.robotics.pathfinding.Path;
 import lejos.robotics.pathfinding.PathFinder;
-import main.Display;
 import main.Main;
 
 
@@ -193,6 +192,12 @@ public class MovementController{
 		nav.waitForStop();
 	}
 
+	/****
+	 * Travel to the center of a tile
+	 * 
+	 * @param x X coordinate of tile to move to
+	 * @param y Y coordinate of tile to move to
+	 */
 	public void travelToTile(int x, int y){
 		nav.stop();
 		nav.clearPath();
@@ -217,6 +222,13 @@ public class MovementController{
 		nav.waitForStop();
 	}
 	
+	/****
+	 * Travel to the center of a tile and face a certain direction
+	 * 
+	 * @param x X coordinate of tile to move to
+	 * @param y Y coordinate of tile to mvoe to
+	 * @param k Heading to turn to upon completion
+	 */
 	public void travelToTile(int x, int y, float k) {
 		travelToTile(x, y);
 		nav.rotateTo(k);

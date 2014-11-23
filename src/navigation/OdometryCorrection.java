@@ -1,14 +1,11 @@
 package navigation;
 
-import lejos.nxt.Button;
 import lejos.nxt.ColorSensor;
 import lejos.nxt.LCD;
-import lejos.nxt.Sound;
 import lejos.robotics.Color;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.Pose;
 import lejos.util.Delay;
-import main.Display;
 import main.Main;
 
 /**
@@ -28,8 +25,8 @@ import main.Main;
 
 public class OdometryCorrection extends Thread {
 	private static boolean enabled;
-	private final static double X_OFFSET = 3.4, // 7.3
-								Y_OFFSET = 3.25, // 7.3
+	private final static double X_OFFSET = 3.4, 
+								Y_OFFSET = 3.25,
 								THRESHOLD = 11;
 
 	private OdometryPoseProvider odometer;

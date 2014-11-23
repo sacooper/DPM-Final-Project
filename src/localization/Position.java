@@ -157,6 +157,9 @@ public class Position {
 	}
 	
 	@Override
+	/*****
+	 * Check if two positions are equal
+	 */
 	public boolean equals(Object o){
 		if (o instanceof Position){
 			Position p = (Position)o;

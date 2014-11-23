@@ -73,160 +73,160 @@ public class Main {
 	
 	private Main(){};
 	
-	public static void arm_lock_test(String[] args){
-		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		pilot.setAcceleration(500);
-		pilot.setTravelSpeed(22);
-		pilot.setRotateSpeed(90);
-		ARM.stop(true);
-		Button.waitForAnyPress();
-		pilot.travel(Main.TILE_WIDTH);
-		pilot.travel(-Main.TILE_WIDTH);
-		pilot.travel(Main.TILE_WIDTH);
-		pilot.travel(-Main.TILE_WIDTH);
-		pilot.travel(Main.TILE_WIDTH);
-		pilot.travel(-Main.TILE_WIDTH);
-		pilot.travel(Main.TILE_WIDTH);
-		pilot.travel(-Main.TILE_WIDTH);
-		pilot.travel(Main.TILE_WIDTH);
-		pilot.travel(-Main.TILE_WIDTH);
-		pilot.travel(Main.TILE_WIDTH);
-		pilot.travel(-Main.TILE_WIDTH);
-		pilot.travel(Main.TILE_WIDTH);
-		pilot.travel(-Main.TILE_WIDTH);
-		pilot.travel(Main.TILE_WIDTH);
-		pilot.travel(-Main.TILE_WIDTH);
-	}
-	
-	public static void block_test(String[] args){
-		// Instantiate a new DifferentialPilot to control movement
-		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		pilot.setAcceleration(500);
-		pilot.setTravelSpeed(22);
-		pilot.setRotateSpeed(90);
-		// Instantiate a new OdometryPoseProvider, of maintaining current pose
-		odo = new OdometryPoseProvider(pilot);
-		odo.setPose(new Pose(0, 0, -90));
-		nav = new Navigator(pilot, odo);
-		arm = new Arm(ARM, ArmState.RAISED);
-		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
-		Button.waitForAnyPress();
-		blockRescuer.rescueBlock();
-		pilot.travel(Main.TILE_WIDTH);
-		arm.drop();		
-	}
-	
-	public static void localizer_test(String[] args){
-		// Instantiate a new DifferentialPilot to control movement
-		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		pilot.setAcceleration(2000);
-		pilot.setTravelSpeed(22);
-		pilot.setRotateSpeed(90);
-		// Instantiate a new OdometryPoseProvider, of maintaining current pose
-		odo = new OdometryPoseProvider(pilot);
-		display = new Display(odo);
-		display.start();
-		
-		localizer = new Localizer(pilot, ULTRASONIC, odo);
-		arm = new Arm(ARM);
-		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
-		Button.waitForAnyPress();
-		
-		localizer.localize();
-		
-		Button.waitForAnyPress();
-		
-	}
-	
-	
-	public static void odo_test_2(String[] args){
-		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		
-		pilot.setAcceleration(500);
-		pilot.setTravelSpeed(22);
-		pilot.setRotateSpeed(90);
-		// Instantiate a new OdometryPoseProvider, of maintaining current pose
-		odo = new OdometryPoseProvider(pilot);
-		
-		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
-		
-		odoCorrection.start();
-	
-		display = new Display(odo);
-		display.start();
-		
-		odo.setPose(new Pose(-15, -15, 0));
-		
-		nav = new Navigator(pilot, odo);
-		Button.waitForAnyPress();
-
-		OdometryCorrection.enable();
-		Delay.msDelay(1000);
-		
-		Path p = new Path();
-		p.add(new Waypoint(Main.TILE_WIDTH*1.5, -Main.TILE_WIDTH/2f));
-		p.add(new Waypoint(Main.TILE_WIDTH*1.5, Main.TILE_WIDTH*1.5));
-		p.add(new Waypoint(-Main.TILE_WIDTH/2f, Main.TILE_WIDTH*1.5));
-		p.add(new Waypoint(-Main.TILE_WIDTH/2f, -Main.TILE_WIDTH/2f));
-		
-		for (Waypoint w : p){
-			nav.goTo(w);
-			Button.waitForAnyPress();
-		}
-		
-		
-		
-	}
-
-	public static void odo_correction_test(String[] args){
-		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		DifferentialPilot pilot2 = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		
-		pilot.setAcceleration(500);
-		pilot.setTravelSpeed(22);
-		pilot.setRotateSpeed(90);
-		pilot2.setRotateSpeed(90);
-		// Instantiate a new OdometryPoseProvider, of maintaining current pose
-		odo = new OdometryPoseProvider(pilot);
-		
-		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
-		
-		odoCorrection.start();
-	
-		display = new Display(odo);
-		display.start();
-		
-		Button.waitForAnyPress();
-		
-		pilot2.rotate(20);
-
-		OdometryCorrection.enable();
-		Delay.msDelay(1000);
-		pilot.travel(Main.TILE_WIDTH*1.5f);
-		
-		
-		
-	}
-	
-	public static void nav_test(String[] args){
-		Button.waitForAnyPress();
-		// Instantiate a new DifferentialPilot to control movement
-		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		pilot.setAcceleration(2000);
-		pilot.setTravelSpeed(22);
-		pilot.setRotateSpeed(90);
-		// Instantiate a new OdometryPoseProvider, of maintaining current pose
-		odo = new OdometryPoseProvider(pilot);
-		
-		// Instantate a new OdometryCorrection and disable it
-		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
-		odo.setPose(new Pose(-15, -15, 90));
-		nav = new Navigator(pilot, odo);
-		moveController = new MovementController(nav);
-		odoCorrection.start();
-		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
-		
-	}
+//	public static void arm_lock_test(String[] args){
+//		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+//		pilot.setAcceleration(500);
+//		pilot.setTravelSpeed(22);
+//		pilot.setRotateSpeed(90);
+//		ARM.stop(true);
+//		Button.waitForAnyPress();
+//		pilot.travel(Main.TILE_WIDTH);
+//		pilot.travel(-Main.TILE_WIDTH);
+//		pilot.travel(Main.TILE_WIDTH);
+//		pilot.travel(-Main.TILE_WIDTH);
+//		pilot.travel(Main.TILE_WIDTH);
+//		pilot.travel(-Main.TILE_WIDTH);
+//		pilot.travel(Main.TILE_WIDTH);
+//		pilot.travel(-Main.TILE_WIDTH);
+//		pilot.travel(Main.TILE_WIDTH);
+//		pilot.travel(-Main.TILE_WIDTH);
+//		pilot.travel(Main.TILE_WIDTH);
+//		pilot.travel(-Main.TILE_WIDTH);
+//		pilot.travel(Main.TILE_WIDTH);
+//		pilot.travel(-Main.TILE_WIDTH);
+//		pilot.travel(Main.TILE_WIDTH);
+//		pilot.travel(-Main.TILE_WIDTH);
+//	}
+//	
+//	public static void block_test(String[] args){
+//		// Instantiate a new DifferentialPilot to control movement
+//		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+//		pilot.setAcceleration(500);
+//		pilot.setTravelSpeed(22);
+//		pilot.setRotateSpeed(90);
+//		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+//		odo = new OdometryPoseProvider(pilot);
+//		odo.setPose(new Pose(0, 0, -90));
+//		nav = new Navigator(pilot, odo);
+//		arm = new Arm(ARM, ArmState.RAISED);
+//		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
+//		Button.waitForAnyPress();
+//		blockRescuer.rescueBlock();
+//		pilot.travel(Main.TILE_WIDTH);
+//		arm.drop();		
+//	}
+//	
+//	public static void localizer_test(String[] args){
+//		// Instantiate a new DifferentialPilot to control movement
+//		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+//		pilot.setAcceleration(2000);
+//		pilot.setTravelSpeed(22);
+//		pilot.setRotateSpeed(90);
+//		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+//		odo = new OdometryPoseProvider(pilot);
+//		display = new Display(odo);
+//		display.start();
+//		
+//		localizer = new Localizer(pilot, ULTRASONIC, odo);
+//		arm = new Arm(ARM);
+//		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
+//		Button.waitForAnyPress();
+//		
+//		localizer.localize();
+//		
+//		Button.waitForAnyPress();
+//		
+//	}
+//	
+//	
+//	public static void odo_test_2(String[] args){
+//		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+//		
+//		pilot.setAcceleration(500);
+//		pilot.setTravelSpeed(22);
+//		pilot.setRotateSpeed(90);
+//		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+//		odo = new OdometryPoseProvider(pilot);
+//		
+//		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
+//		
+//		odoCorrection.start();
+//	
+//		display = new Display(odo);
+//		display.start();
+//		
+//		odo.setPose(new Pose(-15, -15, 0));
+//		
+//		nav = new Navigator(pilot, odo);
+//		Button.waitForAnyPress();
+//
+//		OdometryCorrection.enable();
+//		Delay.msDelay(1000);
+//		
+//		Path p = new Path();
+//		p.add(new Waypoint(Main.TILE_WIDTH*1.5, -Main.TILE_WIDTH/2f));
+//		p.add(new Waypoint(Main.TILE_WIDTH*1.5, Main.TILE_WIDTH*1.5));
+//		p.add(new Waypoint(-Main.TILE_WIDTH/2f, Main.TILE_WIDTH*1.5));
+//		p.add(new Waypoint(-Main.TILE_WIDTH/2f, -Main.TILE_WIDTH/2f));
+//		
+//		for (Waypoint w : p){
+//			nav.goTo(w);
+//			Button.waitForAnyPress();
+//		}
+//		
+//		
+//		
+//	}
+//
+//	public static void odo_correction_test(String[] args){
+//		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+//		DifferentialPilot pilot2 = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+//		
+//		pilot.setAcceleration(500);
+//		pilot.setTravelSpeed(22);
+//		pilot.setRotateSpeed(90);
+//		pilot2.setRotateSpeed(90);
+//		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+//		odo = new OdometryPoseProvider(pilot);
+//		
+//		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
+//		
+//		odoCorrection.start();
+//	
+//		display = new Display(odo);
+//		display.start();
+//		
+//		Button.waitForAnyPress();
+//		
+//		pilot2.rotate(20);
+//
+//		OdometryCorrection.enable();
+//		Delay.msDelay(1000);
+//		pilot.travel(Main.TILE_WIDTH*1.5f);
+//		
+//		
+//		
+//	}
+//	
+//	public static void nav_test(String[] args){
+//		Button.waitForAnyPress();
+//		// Instantiate a new DifferentialPilot to control movement
+//		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+//		pilot.setAcceleration(2000);
+//		pilot.setTravelSpeed(22);
+//		pilot.setRotateSpeed(90);
+//		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+//		odo = new OdometryPoseProvider(pilot);
+//		
+//		// Instantate a new OdometryCorrection and disable it
+//		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
+//		odo.setPose(new Pose(-15, -15, 90));
+//		nav = new Navigator(pilot, odo);
+//		moveController = new MovementController(nav);
+//		odoCorrection.start();
+//		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
+//		
+//	}
 	
 	public static void main(String[] args) {
 		setup();

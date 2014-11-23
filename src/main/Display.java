@@ -12,9 +12,35 @@ import localization.Position;
  *
  */
 public class Display extends Thread {
-	public static enum Action { LOCALIZING, MOVING, BLOCK_ACTION }
-	private static boolean clear, paused;
 	
+	/*****
+	 * Enum representing the current action the robot is performing
+	 * 
+	 * @author Scott Cooper
+	 */
+	public static enum Action { 
+		/**** The robot is currently localizing */
+		LOCALIZING, 
+		/** The robot is currently moving */
+		MOVING, 
+		/** The robot is currently search for / picking up / dropping a block */
+		BLOCK_ACTION;
+		
+		@Override
+		/****
+		 * Get the action currently being performed as a string
+		 */
+		public String toString(){
+			switch(this) {
+			case LOCALIZING: return "LOCALIZING";
+			case MOVING: return "MOVING";
+			case BLOCK_ACTION: return "BLOCK ACTION";
+			default: return "?????";
+		}
+		}
+	}
+	
+	private static boolean clear, paused;
 	private static final int DELAY = 1000;
 	private static Action currentAction = null;
 	private PoseProvider poseProvider;
@@ -45,7 +71,7 @@ public class Display extends Thread {
 				LCD.drawString("X: " + Display.formattedDoubleToString(x, 2) + posStr, 0, 0);
 				LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2) + posStr, 0, 1);
 				LCD.drawString("H: " + Display.formattedDoubleToString(h, 2) + posStr, 0, 2);
-				LCD.drawString(currentActionAsString(), 0, 3);
+				LCD.drawString(currentAction.toString(), 0, 3);
 				LCD.drawString("Start: " + startingPointAsString(), 0, 4);
 			}
 			try{
@@ -102,26 +128,21 @@ public class Display extends Thread {
 		return result;
 	}
 	
+	/***
+	 * Set the current action to display
+	 * 
+	 * @param action The current action being performed
+	 */
 	public static synchronized void setCurrentAction(Action action){
 		currentAction = action;}
+
 	
-	private static synchronized String currentActionAsString(){
-		if (currentAction == null)
-			return "";
-		
-		switch (currentAction){
-		case BLOCK_ACTION:
-			return "Block action";
-		case LOCALIZING:
-			return "Localizing";
-		case MOVING:
-			return "Moving";
-		default:
-			return "?????";
-		
-		}
-	}
-	
+	/****
+	 * Get the starting point as a string, or an empty string if
+	 * it has not been determined yet.
+	 * 
+	 * @return A string representing the starting position
+	 */
 	public static String startingPointAsString(){
 		Position current;
 		current = Localizer.getStartingPosition();
@@ -130,6 +151,13 @@ public class Display extends Thread {
 		return current.getX() + " " + current.getY() + " " + current.getDir().asCardinal();
 	}
 	
+	/***
+	 * Print a location to the LCD screen 
+	 * 
+	 * @param x X coordinate to display
+	 * @param y Y Coordinate to display
+	 * @param h Heading to display
+	 */
 	public static void printLocation(float x, float y, float h){
 		LCD.clear();
 		LCD.drawString("X: " + Display.formattedDoubleToString(x, 2), 0, 0);
@@ -137,8 +165,16 @@ public class Display extends Thread {
 		LCD.drawString("H: " + Display.formattedDoubleToString(h, 2), 0, 2);
 	}
 	
+	/** Enable clearing of the LCD screen (default) */
 	public static void enableClear(){clear = true;}
+	
+	/** Disable clearing of the LCD screen */
 	public static void disableClear(){clear = false;}
+	
+	/** Pause printing to the LCD screen. The LCD screen will not be cleared */
 	public static void pause(){paused = true;}
+	
+	/** Resume printing to the LCD screen. The screen will be cleared based
+	 * on the most recent change. */
 	public static void resume(){paused=false;}
 }

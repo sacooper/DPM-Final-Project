@@ -16,6 +16,7 @@ public class BlockRescuer {
 	private final int THRESHOLD = 2, SWEEP = 35;
 	private UltrasonicSensor us;
 	private Arm arm;
+	
 	/*****
 	 * Instantiate a new BlockRescuer with the following paramaters
 	 * 

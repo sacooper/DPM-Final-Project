@@ -52,6 +52,14 @@ public class Localizer {
 	public static synchronized Position getStartingPosition() {
 			return startingPoint;}
 	
+	/****
+	 * Check whether a position is blocked 
+	 * 
+	 * @param d The direction to check in
+	 * @param x The X coordinate of the position to check
+	 * @param y The Y coordinate of the position to check
+	 * @return True iff the position represented by d, x, y is blocked
+	 */
 	private boolean isBlocked(Direction d, byte x, byte y){
 		switch(d){
 		case UP: return (y + 1) == Main.NUM_TILES || map.get(x+Main.NUM_TILES + y + 1);
@@ -66,6 +74,13 @@ public class Localizer {
 		}
 		
 	}
+	
+	/****
+	 * Generate the list of all possible states. It is assumed that
+	 * the map has already be set.
+	 * 
+	 * @return An arraylist of all possible starting positions
+	 */
 	private ArrayList<Position> generatePossibleStates(){
 		ArrayList<Position> possible = new ArrayList<Position>();
 		// Initialize possible states based on map
@@ -241,6 +256,13 @@ public class Localizer {
 		return true;
 	}
 	
+	/****
+	 * Get the position 1 forward from the position p. No error checking on the
+	 * validity of the position is performed. 
+	 * 
+	 * @param p The starting position
+	 * @return The position 1 forward from p
+	 */
 	private static Position forward(Position p){
 		switch(p.getDir()){
 		case DOWN: return new Position(p.getX(), p.getY() - 1, null, false);
@@ -251,6 +273,16 @@ public class Localizer {
 		}
 	}
 	
+	/***
+	 * Check whether the Position p is containined in the ArrayList seen. A
+	 * position is considered contained within seen iff the X and Y coordinates
+	 * are equal
+	 * 
+	 * 
+	 * @param seen The arraylist of positions to check from
+	 * @param p The position to check for
+	 * @return true iff the p is contained with seen, otherwise false
+	 */
 	private static boolean contains(ArrayList<Position> seen, Position p){
 		for (Position q : seen)
 			if (q.getX() == p.getX() && q.getY() == p.getY())
