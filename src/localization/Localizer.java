@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 
+import navigation.OdometryCorrection;
 import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.Sound;
@@ -173,6 +174,8 @@ public class Localizer {
 					
 					if (!contains(seen, new Position(x, y, null, false)))
 						foundNewSpot = true;
+					
+					correct();
 				}
 			lejos.util.Delay.msDelay(300);
 			}	
@@ -289,5 +292,9 @@ public class Localizer {
 				return true;
 		return false;
 	}
+	
+	private void correct(){
+		pilot.travel(OdometryCorrection.lastDistanceCorrection());
+		pilot.rotate(OdometryCorrection.lastHeadingCorrection());}
 	
 }

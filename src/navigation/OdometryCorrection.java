@@ -24,6 +24,8 @@ import main.Main;
  */
 
 public class OdometryCorrection extends Thread {
+	private static double lastHeading, lastDist;
+	
 	private static boolean enabled;
 	private final static double X_OFFSET = 3.4, 
 								Y_OFFSET = 3.25,
@@ -96,7 +98,7 @@ public class OdometryCorrection extends Thread {
 				//	The following if statement is nearly identical to the one above. The right 
 				//	ColorSensor is polled instead of the left one.
 				if (lastColorRight - newColorRight > THRESHOLD) {
-					if ( !sawLeft){
+					if (!sawLeft){
 						lastPose = new Pose(p.getX(), p.getY(), p.getHeading());
 						leftFirst = false;
 					}
@@ -108,7 +110,10 @@ public class OdometryCorrection extends Thread {
 				if (sawRight && sawLeft){
 					sawRight = false;
 					sawLeft = false;
-					double correction = Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2))) ; 
+					double correction = Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2))) ;
+					
+					lastHeading = leftFirst ? correction : -correction;
+					
 					double heading = p.getHeading() + (leftFirst ? -correction : correction);
 					
 					LCD.drawString(lastPose.distanceTo(p.getLocation()) + "", 0, 4);
@@ -137,6 +142,9 @@ public class OdometryCorrection extends Thread {
 						// Negative Y
 						new_y = (float) (getLine(p.getY() + Math.abs(hypotenuse * Math.cos(tempAngle))) - Math.abs(hypotenuse * Math.cos(tempAngle)));
 					}
+					
+					lastDist = new_y == p.getY() ? new_x - p.getX() : new_y - p.getY();
+					
 					odometer.setPose(new Pose(new_x, new_y, (float) heading));
 					
 					
@@ -171,6 +179,32 @@ public class OdometryCorrection extends Thread {
 	 * Disable OdometeryCorrection globally
 	 */
 	public static void disable(){enabled = false;}
+	
+	/****
+	 * Get the amount the heading was off the last time a line was crossed.
+	 * Following a call to this method, the last heading is set to 0 to 
+	 * prevent subsequent corrections if a line is missed.
+	 * 
+	 * @return The amount the heading needs to be corrected
+	 */
+	public static double lastHeadingCorrection(){
+		double temp = lastHeading;
+		lastHeading = 0;
+		return temp;}
+	
+	/****
+	 * Get the amount the distance was off the last time a line was crossed.
+	 * Following a call to this method, the last distance correction
+	 * is set to 0 to prevent subsequent corrections if a line is missed.
+	 * 
+	 * @return The amount the distance needs to be corrected
+	 */
+	public static double lastDistanceCorrection(){
+		double temp = lastDist;
+		lastDist = 0;
+		return temp;}
+	
+	
 
 
 }
