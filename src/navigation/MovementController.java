@@ -54,7 +54,7 @@ public class MovementController{
 		 * 
 		 * @param map The map to base the grid off of
 		 */
-		public Grid(BitSet map){
+		public Grid(){
 			regenerate();
 		}
 		
@@ -163,7 +163,7 @@ public class MovementController{
 	
 	private Navigator nav;			// Navigator to control movement
 	private PathFinder pathFinder;	// Path finder
-	
+	private Grid grid;
 	/***
 	 * Create a new movement Controller
 	 * 
@@ -171,7 +171,7 @@ public class MovementController{
 	 */
 	public MovementController(Navigator nav){
 		this.nav = nav;
-		Grid grid = new Grid(Main.getCurrentMap());
+		grid = new Grid();
 		pathFinder = new NodePathFinder(new AstarSearchAlgorithm(), grid);
 	}
 	
@@ -233,4 +233,12 @@ public class MovementController{
 		travelToTile(x, y);
 		nav.rotateTo(k);
 		nav.waitForStop();}
+
+	/****
+	 * Regenerate the set of nodes. Necessary when changes to the map have been made
+	 */
+	public void regenerate() {
+		grid.regenerate();
+		pathFinder = new NodePathFinder(new AstarSearchAlgorithm(), grid);
+	}
 }

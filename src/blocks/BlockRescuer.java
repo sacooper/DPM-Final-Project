@@ -2,6 +2,7 @@ package blocks;
 
 import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.navigation.DifferentialPilot;
+import lejos.robotics.navigation.Navigator;
 import main.Main;
 import navigation.OdometryCorrection;
 
@@ -16,6 +17,7 @@ public class BlockRescuer {
 	private final int THRESHOLD = 2, SWEEP = 35;
 	private UltrasonicSensor us;
 	private Arm arm;
+	private Navigator nav;
 	
 	/*****
 	 * Instantiate a new BlockRescuer with the following paramaters
@@ -24,10 +26,11 @@ public class BlockRescuer {
 	 * @param us The <code>UltrasonicSensor</code> to use for detecting a block
 	 * @param arm The <code>Arm</code> that controls the claw
 	 */
-	public BlockRescuer(DifferentialPilot pilot, UltrasonicSensor us, Arm arm){
+	public BlockRescuer(DifferentialPilot pilot, Navigator nav, UltrasonicSensor us, Arm arm){
 		this.pilot = pilot;
 		this.us = us;
 		this.arm = arm;
+		this.nav = nav;
 	}
 	
 	/***
@@ -106,7 +109,7 @@ public class BlockRescuer {
 			
 		}
 		pilot.rotate(-15);
-		Main.getNav().rotateTo(Math.round(Main.getNav().getPoseProvider().getPose().getHeading() / 90f) * 90f);
+		nav.rotateTo(Math.round(nav.getPoseProvider().getPose().getHeading() / 90f) * 90f);
 		pilot.travel(-24);
 		return dist + 13;
 	}

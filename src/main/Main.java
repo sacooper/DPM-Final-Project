@@ -242,6 +242,8 @@ public class Main {
 		
 		
 		Button.waitForAnyPress();
+		
+		
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
 		pilot.setAcceleration(500);
@@ -268,9 +270,7 @@ public class Main {
 		arm = new Arm(ARM, Arm.ArmState.RAISED);
 		
 		// Instantiate a new blockRescuer
-		blockRescuer = new BlockRescuer(pilot, ULTRASONIC, arm);
-		
-		OdometryCorrection.disable();
+		blockRescuer = new BlockRescuer(pilot, nav, ULTRASONIC, arm);
 		odoCorrection.start();
 		display.start();
 		
@@ -280,15 +280,20 @@ public class Main {
 		OdometryCorrection.enable();
 		Display.setCurrentAction(Display.Action.MOVING);
 //		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
+		
+		Main.blockPickupArea();
+		moveController.regenerate();
 		moveController.travelToTile(1, 2, -90);
-		pilot.travel(Main.TILE_WIDTH/2f);
+		Main.unblockPickupArea();
+		moveController.regenerate();
+		pilot.travel(odo.getPose().getY() - Main.TILE_WIDTH);	// Move to top of current tile
 		
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 		blockRescuer.rescueBlock();
 		
 		Display.setCurrentAction(Display.Action.MOVING);
 		moveController.travelToTile((int)dropoff.getX(), (int)dropoff.getY(), (float)dropoff.getHeading());
-//		moveController.travelToTile(1, 2, -90);
+
 		pilot.travel(-Main.TILE_WIDTH/2f);
 		                  
 		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
@@ -346,55 +351,55 @@ public class Main {
 		// setBlock(map #, x, y)
 		
 		// Initialization of map 0
-		setBlock(0, 0, 5);
-		setBlock(0, 1, 7);
-		setBlock(0, 2, 4);
-		setBlock(0, 2, 6);
-		setBlock(0, 2, 7);
-		setBlock(0, 3, 5);
-		setBlock(0, 4, 1);
-		setBlock(0, 4, 2);
-		setBlock(0, 4, 3);
-		setBlock(0, 6, 2);
-		setBlock(0, 6, 5);
-		setBlock(0, 7, 0);
-		setBlock(0, 7, 2);
-		setBlock(0, 7, 3);
-		setBlock(0, 7, 6);
+		setBlock(0, 0, 5, true);
+		setBlock(0, 1, 7, true);
+		setBlock(0, 2, 4, true);
+		setBlock(0, 2, 6, true);
+		setBlock(0, 2, 7, true);
+		setBlock(0, 3, 5, true);
+		setBlock(0, 4, 1, true);
+		setBlock(0, 4, 2, true);
+		setBlock(0, 4, 3, true);
+		setBlock(0, 6, 2, true);
+		setBlock(0, 6, 5, true);
+		setBlock(0, 7, 0, true);
+		setBlock(0, 7, 2, true);
+		setBlock(0, 7, 3, true);
+		setBlock(0, 7, 6, true);
 		
 		// Initialization of map 1
-		setBlock(1, 0, 5);
-		setBlock(1, 1, 6);
-		setBlock(1, 2, 0);
-		setBlock(1, 2, 3);
-		setBlock(1, 2, 4);
-		setBlock(1, 3, 1);
-		setBlock(1, 3, 7);
-		setBlock(1, 4, 4);
-		setBlock(1, 4, 6);
-		setBlock(1, 4, 7);
-		setBlock(1, 5, 0);
-		setBlock(1, 7, 0);
-		setBlock(1, 7, 1);
-		setBlock(1, 7, 6);
-		setBlock(1, 7, 7);
+		setBlock(1, 0, 5, true);
+		setBlock(1, 1, 6, true);
+		setBlock(1, 2, 0, true);
+		setBlock(1, 2, 3, true);
+		setBlock(1, 2, 4, true);
+		setBlock(1, 3, 1, true);
+		setBlock(1, 3, 7, true);
+		setBlock(1, 4, 4, true);
+		setBlock(1, 4, 6, true);
+		setBlock(1, 4, 7, true);
+		setBlock(1, 5, 0, true);
+		setBlock(1, 7, 0, true);
+		setBlock(1, 7, 1, true);
+		setBlock(1, 7, 6, true);
+		setBlock(1, 7, 7, true);
 		
 		// Initialization of map 2
-		setBlock(2, 0, 7);
-		setBlock(2, 2, 3);
-		setBlock(2, 2, 6);
-		setBlock(2, 3, 2);
-		setBlock(2, 3, 3);
-		setBlock(2, 3, 4);
-		setBlock(2, 3, 6);
-		setBlock(2, 4, 0);
-		setBlock(2, 4, 7);
-		setBlock(2, 5, 0);
-		setBlock(2, 5, 5);
-		setBlock(2, 6, 4);
-		setBlock(2, 7, 0);
-		setBlock(2, 7, 4);
-		setBlock(2, 7, 6);
+		setBlock(2, 0, 7, true);
+		setBlock(2, 2, 3, true);
+		setBlock(2, 2, 6, true);
+		setBlock(2, 3, 2, true);
+		setBlock(2, 3, 3, true);
+		setBlock(2, 3, 4, true);
+		setBlock(2, 3, 6, true);
+		setBlock(2, 4, 0, true);
+		setBlock(2, 4, 7, true);
+		setBlock(2, 5, 0, true);
+		setBlock(2, 5, 5, true);
+		setBlock(2, 6, 4, true);
+		setBlock(2, 7, 0, true);
+		setBlock(2, 7, 4, true);
+		setBlock(2, 7, 6, true);
 		
 		
 		// Initialization of map 3
@@ -405,14 +410,14 @@ public class Main {
 	 /**********************************************/
 	}
 
-	private static void setBlock(int map, int x, int y){
+	private static void setBlock(int map, int x, int y, boolean v){
 		if (maps==null) throw new RuntimeException("Maps not initialized");
+		if (map >= maps.length) throw new RuntimeException("Invalid map number");
 		
-		maps[map].set(x * Main.NUM_TILES + y);}
+		maps[map].set(x * Main.NUM_TILES + y, v);}
 	
 	public static DifferentialPilot getPilot() {
-		return pilot;
-	}
+		return pilot;}
 	
 	public static void setup(){
 		int x =0, y = 0, option;
@@ -466,9 +471,26 @@ public class Main {
 		dropoff = new Waypoint(x, y, ang);
 		
 	}
-
-
-	public static Navigator getNav() {
-		return nav;
+	
+	/***
+	 * Mark the pickup area as blocked. Necessary to prevent any path 
+	 * from moving through the pickup area.
+	 */
+	public static void blockPickupArea() {
+		setBlock(Main.getMapNumber(), 0, 0, true);
+		setBlock(Main.getMapNumber(), 0, 1, true);
+		setBlock(Main.getMapNumber(), 1, 0, true);
+		setBlock(Main.getMapNumber(), 1, 1, true);
+	}
+	
+	/***
+	 * Mark the pickup area as unblocked. Necessary to allow
+	 * pathfinding from within the pickup area.
+	 */
+	public static void unblockPickupArea() {
+		setBlock(Main.getMapNumber(), 0, 0, false);
+		setBlock(Main.getMapNumber(), 0, 1, false);
+		setBlock(Main.getMapNumber(), 1, 0, false);
+		setBlock(Main.getMapNumber(), 1, 1, false);
 	}
 }
