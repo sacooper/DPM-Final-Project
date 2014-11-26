@@ -2,6 +2,7 @@ package main;
 
 import lejos.nxt.LCD;
 import lejos.robotics.localization.PoseProvider;
+import lejos.robotics.navigation.Pose;
 import localization.Localizer;
 import localization.Position;
 
@@ -159,7 +160,9 @@ public class Display extends Thread {
 	 * @param h Heading to display
 	 */
 	public static void printLocation(float x, float y, float h){
-		LCD.clear();
+		LCD.clear(0);
+		LCD.clear(1);
+		LCD.clear(2);
 		LCD.drawString("X: " + Display.formattedDoubleToString(x, 2), 0, 0);
 		LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2), 0, 1);
 		LCD.drawString("H: " + Display.formattedDoubleToString(h, 2), 0, 2);
@@ -177,4 +180,9 @@ public class Display extends Thread {
 	/** Resume printing to the LCD screen. The screen will be cleared based
 	 * on the most recent change. */
 	public static void resume(){paused=false;}
+
+	public static void printLocation(Pose pose) {
+		printLocation(pose.getX(), pose.getY(), pose.getHeading());
+		
+	}
 }

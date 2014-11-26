@@ -57,13 +57,13 @@ public class Main {
 		TILE_WIDTH = 30.48f;
 	
 	public static final int
-		NUM_TILES = 4;							// FIXME
+		NUM_TILES = 8;							// FIXME
 	
 	// List of maps for use in competition
 	// usage: maps[map_number][x][y]
 	private static final BitSet[] maps;
 
-	private static final int NUM_MAPS = 6;		// FIXME
+	private static final int NUM_MAPS = 3;		// FIXME
 	private static int mapNumber = 0;			// FIXME
 	private static Waypoint dropoff = null;
 	
@@ -228,7 +228,7 @@ public class Main {
 //	}
 	
 	
-	public static void main(String[] args){
+	public static void _main(String[] args){
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
 		pilot.setAcceleration(500);
@@ -274,7 +274,7 @@ public class Main {
 	}
 	
 	
-	public static void _main(String[] args) {
+	public static void main(String[] args) {
 		setup();
 		
 		LCD.clear();
@@ -318,8 +318,16 @@ public class Main {
 		// Instantiate a new blockRescuer
 		blockRescuer = new BlockRescuer(pilot, nav, ULTRASONIC, arm);
 		odoCorrection.start();
+//		OdometryCorrection.enable();
 		display.start();
+		odo.setPose(new Pose(-Main.TILE_WIDTH/2f, -Main.TILE_WIDTH/2f, 0));
 		
+		blockRescuer.rescueBlock();
+		arm.drop();
+		
+		
+		
+		System.exit(0);
 		Display.setCurrentAction(Display.Action.LOCALIZING);
 		localizer.localize();
 		
@@ -383,15 +391,15 @@ public class Main {
 					maps[i] = new BitSet(Main.NUM_TILES * Main.NUM_TILES);
 					maps[i].clear();}}}
 	
-	/**********************************************/
+	/**********************************************
 		// The following is from Lab 5 :
 		maps[0].set(0*Main.NUM_TILES + 3, true);	// (0,3)
 		maps[0].set(1*Main.NUM_TILES + 0, true);	// (1,0)
 		maps[0].set(2*Main.NUM_TILES + 2, true);	// (2,2)
 		maps[0].set(3*Main.NUM_TILES + 2, true);	// (3,2)
 		//////////////////////////////
-	/************************************************/
-	/**********************************************
+	************************************************/
+	/**********************************************/
 		// The follow are for beta demonstrations
 		
 		// setBlock(map #, x, y, isBlocked)
@@ -453,7 +461,7 @@ public class Main {
 		// Initialization of map 4
 		
 		// Initialization of map 5
-	 **********************************************/
+	/**********************************************/
 	}
 
 	private static void setBlock(int map, int x, int y, boolean v){

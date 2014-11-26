@@ -46,6 +46,7 @@ public class Arm {
 		this.arm = arm;
 		this.armState = armState;
 		this.arm.stop(true);
+		this.arm.setSpeed(300);
 	}
 	
 	/****

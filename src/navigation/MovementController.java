@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 
+import lejos.nxt.Button;
+import lejos.nxt.LCD;
 import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
@@ -14,6 +16,7 @@ import lejos.robotics.pathfinding.Node;
 import lejos.robotics.pathfinding.NodePathFinder;
 import lejos.robotics.pathfinding.Path;
 import lejos.robotics.pathfinding.PathFinder;
+import main.Display;
 import main.Main;
 
 
@@ -216,10 +219,18 @@ public class MovementController{
 		for (Waypoint way : p){
 			way.x = way.x * Main.TILE_WIDTH - Main.TILE_WIDTH/2f;
 			way.y = way.y * Main.TILE_WIDTH - Main.TILE_WIDTH/2f;
+			nav.goTo(way);
+			nav.waitForStop();
+			Pose pose = nav.getPoseProvider().getPose();
+			Main.getPilot().travel(OdometryCorrection.lastDistanceCorrection());
+			Main.getPilot().rotate(OdometryCorrection.lastHeadingCorrection());
+			nav.getPoseProvider().setPose(pose);
+			Display.printLocation(nav.getPoseProvider().getPose());
+//			Button.waitForAnyPress();
 		}
 		
 		nav.singleStep(false);
-		nav.followPath(p);
+//		nav.followPath(p);
 		nav.waitForStop();
 	}
 	

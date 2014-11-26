@@ -111,18 +111,14 @@ public class OdometryCorrection extends Thread {
 					Sound.beep();
 					sawRight = false;
 					sawLeft = false;
-					double correction = Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2))) ;
-					correction = Math.abs(correction) < 5 ? 0 : correction;
+					double correction = Math.abs(Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2)))) ;
+
+					LCD.clear(3);
 					lastHeading = leftFirst ? correction : -correction;
-					
+					LCD.drawString(lastHeading + "", 0, 3);
 					double heading = p.getHeading() + (leftFirst ? -correction : correction);
-					
-					LCD.drawString(lastPose.distanceTo(p.getLocation()) + "", 0, 4);
-					if (leftFirst){
-						tempAngle = heading * Math.PI / 180f - offset + Math.PI/2;
-					} else {
-						tempAngle = heading * Math.PI / 180f + offset + Math.PI/2;
-					}
+
+					tempAngle = Math.PI - offset - Math.abs(lastHeading);
 					
 					float new_x, new_y;
 					
@@ -132,21 +128,25 @@ public class OdometryCorrection extends Thread {
 					
 					if (heading < 45 || heading >= 315){
 						// Positive x
-						new_x = (float) (getLine(p.getX() + Math.abs(hypotenuse * Math.sin(tempAngle))) - Math.abs(hypotenuse * Math.sin(tempAngle)));
+						new_x = (float) (getLine(p.getX() + Math.abs(hypotenuse * Math.cos(tempAngle))) - Math.abs(hypotenuse * Math.cos(tempAngle)));
+						lastDist = (new_x > p.getX() ? -1 : 1) * (Math.abs(new_x - p.getX()));
 					} else if (heading >= 45 && heading < 135){
 						// Positive y
 						new_y = (float) (getLine(p.getY() + Math.abs(hypotenuse * Math.cos(tempAngle))) - Math.abs(hypotenuse * Math.cos(tempAngle)));
+						lastDist = (new_y > p.getY() ? -1 : 1) * (Math.abs(new_y - p.getY()));
 					} else if (heading >= 135 && heading < 225){
 						// Negative X
-						new_x = (float) (getLine(p.getX() - Math.abs(hypotenuse * Math.sin(tempAngle))) + Math.abs(hypotenuse * Math.sin(tempAngle)));
+						new_x = (float) (getLine(p.getX() - Math.abs(hypotenuse * Math.cos(tempAngle))) + Math.abs(hypotenuse * Math.cos(tempAngle)));
+						lastDist = (new_x > p.getX() ? 1 : -1) * (Math.abs(new_x - p.getX()));
 					} else if (heading >= 225 && heading < 315){
 						// Negative Y
-						new_y = (float) (getLine(p.getY() + Math.abs(hypotenuse * Math.cos(tempAngle))) - Math.abs(hypotenuse * Math.cos(tempAngle)));
+						new_y = (float) (getLine(p.getY() - Math.abs(hypotenuse * Math.cos(tempAngle))) + Math.abs(hypotenuse * Math.cos(tempAngle)));
+						lastDist = (new_y > p.getY() ? 1 : -1) * (Math.abs(new_y - p.getY()));
 					}
 					
-					lastDist = new_y == p.getY() ? new_x - p.getX() : new_y - p.getY();
-					
-					odometer.setPose(new Pose(new_x, new_y, (float) heading));
+					lastDist = Math.abs(lastDist) > 7 ? 0 : lastDist;							
+					LCD.clear(4);
+					LCD.drawString(lastDist + "", 0, 4);
 				}
 
 			}
