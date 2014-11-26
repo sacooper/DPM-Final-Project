@@ -15,13 +15,10 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
-import lejos.robotics.pathfinding.Path;
-import lejos.util.Delay;
 import localization.Localizer;
 import navigation.MovementController;
 import navigation.OdometryCorrection;
 import blocks.Arm;
-import blocks.Arm.ArmState;
 import blocks.BlockRescuer;
 
 /*****
@@ -56,21 +53,23 @@ public class Main {
 		LEFT_WHEEL_D = 4.155f,
 		RIGHT_WHEEL_D = 4.155f,
 //		WHEEL_BASE = 17.525f,
-		WHEEL_BASE = 17.85f,		
+		WHEEL_BASE = 18.05f,		
 		TILE_WIDTH = 30.48f;
 	
 	public static final int
-		NUM_TILES = 8;		// FIXME
+		NUM_TILES = 4;							// FIXME
 	
 	// List of maps for use in competition
 	// usage: maps[map_number][x][y]
 	private static final BitSet[] maps;
 
-	private static final int NUM_MAPS = 3;		// FIXME
-	private static int mapNumber = 0;
+	private static final int NUM_MAPS = 6;		// FIXME
+	private static int mapNumber = 0;			// FIXME
 	private static Waypoint dropoff = null;
 	
-	
+	/***
+	 * Private constructor to prevent external instantiation
+	 */
 	private Main(){};
 	
 //	public static void arm_lock_test(String[] args){
@@ -228,7 +227,54 @@ public class Main {
 //		
 //	}
 	
-	public static void main(String[] args) {
+	
+	public static void main(String[] args){
+		// Instantiate a new DifferentialPilot to control movement
+		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
+		pilot.setAcceleration(500);
+		pilot.setTravelSpeed(22);
+		pilot.setRotateSpeed(90);
+		// Instantiate a new OdometryPoseProvider, of maintaining current pose
+		odo = new OdometryPoseProvider(pilot);
+		
+		// Instantate a new OdometryCorrection and disable it
+		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
+		
+		display = new Display(odo);
+		
+		// Instantiate a new Localizer
+		localizer = new Localizer(pilot, ULTRASONIC, odo);
+		
+		// Instantiate a new Navigator to control movement
+		nav = new Navigator(pilot, odo);
+		
+		// Instantiate a new MovementController for travelling to waypoints
+		moveController = new MovementController(nav);
+
+		// Instantiate a new Arm for controlling claw movement
+		arm = new Arm(ARM, Arm.ArmState.RAISED);
+		
+		// Instantiate a new blockRescuer
+		blockRescuer = new BlockRescuer(pilot, nav, ULTRASONIC, arm);
+		odoCorrection.start();
+		
+		
+		display.start();
+		
+		Button.waitForAnyPress();
+		
+//		odo.setPose(new Pose(Main.TILE_WIDTH*1.5f, 0, -90));
+//		blockRescuer.rescueBlock();
+		odo.setPose(new Pose(Main.TILE_WIDTH*-.5f, Main.TILE_WIDTH*-.5f, 90));
+		OdometryCorrection.enable();
+		moveController.travelToTile(3, 3);
+		moveController.travelToTile(3, 0);
+		moveController.travelToTile(0, 0);
+		moveController.travelToTile(3, 3);
+	}
+	
+	
+	public static void _main(String[] args) {
 		setup();
 		
 		LCD.clear();
@@ -281,10 +327,10 @@ public class Main {
 		Display.setCurrentAction(Display.Action.MOVING);
 //		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
 		
-		Main.blockPickupArea();
+		blockPickupArea();
 		moveController.regenerate();
 		moveController.travelToTile(1, 2, -90);
-		Main.unblockPickupArea();
+		unblockPickupArea();
 		moveController.regenerate();
 		pilot.travel(odo.getPose().getY() - Main.TILE_WIDTH);	// Move to top of current tile
 		
@@ -337,18 +383,18 @@ public class Main {
 					maps[i] = new BitSet(Main.NUM_TILES * Main.NUM_TILES);
 					maps[i].clear();}}}
 	
-	/**********************************************
+	/**********************************************/
 		// The following is from Lab 5 :
 		maps[0].set(0*Main.NUM_TILES + 3, true);	// (0,3)
 		maps[0].set(1*Main.NUM_TILES + 0, true);	// (1,0)
 		maps[0].set(2*Main.NUM_TILES + 2, true);	// (2,2)
 		maps[0].set(3*Main.NUM_TILES + 2, true);	// (3,2)
 		//////////////////////////////
-	************************************************/
-	/**********************************************/
+	/************************************************/
+	/**********************************************
 		// The follow are for beta demonstrations
 		
-		// setBlock(map #, x, y)
+		// setBlock(map #, x, y, isBlocked)
 		
 		// Initialization of map 0
 		setBlock(0, 0, 5, true);
@@ -407,7 +453,7 @@ public class Main {
 		// Initialization of map 4
 		
 		// Initialization of map 5
-	 /**********************************************/
+	 **********************************************/
 	}
 
 	private static void setBlock(int map, int x, int y, boolean v){
@@ -476,7 +522,7 @@ public class Main {
 	 * Mark the pickup area as blocked. Necessary to prevent any path 
 	 * from moving through the pickup area.
 	 */
-	public static void blockPickupArea() {
+	private static void blockPickupArea() {
 		setBlock(Main.getMapNumber(), 0, 0, true);
 		setBlock(Main.getMapNumber(), 0, 1, true);
 		setBlock(Main.getMapNumber(), 1, 0, true);
@@ -487,7 +533,7 @@ public class Main {
 	 * Mark the pickup area as unblocked. Necessary to allow
 	 * pathfinding from within the pickup area.
 	 */
-	public static void unblockPickupArea() {
+	private static void unblockPickupArea() {
 		setBlock(Main.getMapNumber(), 0, 0, false);
 		setBlock(Main.getMapNumber(), 0, 1, false);
 		setBlock(Main.getMapNumber(), 1, 0, false);

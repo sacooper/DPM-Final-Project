@@ -71,7 +71,7 @@ public class Display extends Thread {
 				LCD.drawString("X: " + Display.formattedDoubleToString(x, 2) + posStr, 0, 0);
 				LCD.drawString("Y: " + Display.formattedDoubleToString(y, 2) + posStr, 0, 1);
 				LCD.drawString("H: " + Display.formattedDoubleToString(h, 2) + posStr, 0, 2);
-				LCD.drawString(currentAction.toString(), 0, 3);
+				LCD.drawString(currentAction == null ? "" : currentAction.toString(), 0, 3);
 				LCD.drawString("Start: " + startingPointAsString(), 0, 4);
 			}
 			try{

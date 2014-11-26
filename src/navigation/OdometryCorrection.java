@@ -2,10 +2,10 @@ package navigation;
 
 import lejos.nxt.ColorSensor;
 import lejos.nxt.LCD;
+import lejos.nxt.Sound;
 import lejos.robotics.Color;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.Pose;
-import lejos.util.Delay;
 import main.Main;
 
 /**
@@ -108,10 +108,11 @@ public class OdometryCorrection extends Thread {
 				
 				
 				if (sawRight && sawLeft){
+					Sound.beep();
 					sawRight = false;
 					sawLeft = false;
 					double correction = Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2))) ;
-					
+					correction = Math.abs(correction) < 5 ? 0 : correction;
 					lastHeading = leftFirst ? correction : -correction;
 					
 					double heading = p.getHeading() + (leftFirst ? -correction : correction);
@@ -146,9 +147,6 @@ public class OdometryCorrection extends Thread {
 					lastDist = new_y == p.getY() ? new_x - p.getX() : new_y - p.getY();
 					
 					odometer.setPose(new Pose(new_x, new_y, (float) heading));
-					
-					
-					Delay.msDelay(1000);
 				}
 
 			}

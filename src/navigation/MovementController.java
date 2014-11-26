@@ -147,6 +147,7 @@ public class MovementController{
 		@Override
 		public void regenerate() {
 			BitSet map = Main.getCurrentMap();
+			
 			set = new ArrayList<Node>();
 			
 			for (int x = 0; x < Main.NUM_TILES; x++){
