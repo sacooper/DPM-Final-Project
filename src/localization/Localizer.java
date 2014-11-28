@@ -119,13 +119,172 @@ public class Localizer {
 		dist = us_scanner.getDistance();
 		return dist > 50 ? 50 : dist;
 	}
+	/********
+	 * Perform Localization using a known map
+	 * 
+	 * @return Number of observations made
+	 * @since v4
+	 */
+	public int localize(){
+		ArrayList<Position> seen = new ArrayList<Position>();		// All of the places we've been
+		ArrayList<Position> possible = generatePossibleStates(); 	// All possible starting points left
+		
+		// Current direction relative to where we started
+		Direction current = Direction.UP;	
+		// Current X and Y relative to where we started, # of observations
+		int x = 0, y = 0, observations = 0;	
+		
+		boolean secondPass = false;
+		
+		while (possible.size() > 1) { // Narrow down list of states until we know where we started
+			
+			// Check if we've been where we are before
+			if (contains(seen, new Position(x, y, null, false))){
+				boolean isBlocked = getFilteredData() < (Main.TILE_WIDTH);
+				
+				if (isBlocked || (contains(seen, forward(new Position(x, y, current, false))) && !secondPass)){
+					pilot.rotate(-90);
+					current = Position.rotateRight(current);
+					isBlocked = getFilteredData() < Main.TILE_WIDTH;
+					if (isBlocked || (contains(seen, forward(new Position(x, y, current, false))) && !secondPass)){
+						pilot.rotate(180);
+						current = Position.rotateLeft(Position.rotateLeft(current));
+						isBlocked = getFilteredData() < Main.TILE_WIDTH;
+						if (isBlocked && !secondPass){
+							secondPass = true;
+							pilot.rotate(-90);
+							current = Position.rotateRight(current);
+							continue;
+						} else if (isBlocked && secondPass){
+							throw new RuntimeException("can't localize");
+						}
+					}
+				}
+				pilot.travel(Main.TILE_WIDTH);
+				switch(current){
+					case DOWN: y--; break;
+					case LEFT: x--; break;
+					case RIGHT: x++; break;
+					case UP: y++; break;
+					default: throw new RuntimeException("Shouldn't Happen");
+				}
+				correct();
+			}
+			secondPass = false;
+			
+			boolean  leftBlocked, rightBlocked,
+				isBlocked = getFilteredData() < (Main.TILE_WIDTH);
+			
+			observations++;
+			Position me = new Position(x, y, current, isBlocked);
+			Iterator<Position> iter = possible.iterator();
+			
+			while (iter.hasNext()){
+				if(!valid(iter.next(), me))
+					iter.remove();
+			}
+			
+			if (possible.size() == 1) break;
+			else if (possible.size() < 1) localize();
+			
+			/********************************************/
+			
+			pilot.rotate(-90);
+			current = Position.rotateRight(current);
+			rightBlocked = getFilteredData() < (Main.TILE_WIDTH);
+			
+			observations++;
+			me = new Position(x, y, current, rightBlocked);
+			iter = possible.iterator();
+			
+			while (iter.hasNext()){
+				if(!valid(iter.next(), me))
+					iter.remove();
+			}
+			
+			if (possible.size() == 1) break;
+			else if (possible.size() < 1) localize();
+			
+			
+			/********************************************/
+			
+			pilot.rotate(180);
+			current = Position.rotateLeft(Position.rotateLeft(current));
+			leftBlocked = getFilteredData() < Main.TILE_WIDTH;
+			
+			observations++;
+			me = new Position(x, y, current, leftBlocked);
+			iter = possible.iterator();
+			while (iter.hasNext()){
+				if(!valid(iter.next(), me))
+					iter.remove();
+			}
+			
+			if (possible.size() == 1) break;
+			else if (possible.size() < 1) localize();
+			
+			/********************************************/
+			
+			if (!leftBlocked && !contains(seen, forward(new Position(x, y, current, false))));
+			else if (!isBlocked && !contains(seen, forward(new Position(x, y, Position.rotateRight(current), false)))){
+				pilot.rotate(-90);
+				current = Position.rotateRight(current);
+			} else if (!rightBlocked && !contains(seen, forward(new Position(x, y, Position.rotateRight(Position.rotateRight(current)), false)))){
+				pilot.rotate(-180);
+				current = Position.rotateRight(Position.rotateRight(current));
+			} else {
+				pilot.rotate(90);
+				current = Position.rotateLeft(current);
+			}
+
+			seen.add(new Position(x, y, null, false));
+			pilot.travel(Main.TILE_WIDTH);
+			switch(current){
+				case DOWN: y--; break;
+				case LEFT: x--; break;
+				case RIGHT: x++; break;
+				case UP: y++; break;
+				default: throw new RuntimeException("Shouldn't Happen");
+			}
+			correct();
+		}
+
+		if (possible.size() != 1) localize();		// restart if error
+		
+		startingPoint = possible.get(0);
+		
+		float real_x = Position.relativeX(startingPoint, new Position(x, y, current, false));
+		float real_y = Position.relativeY(startingPoint, new Position(x, y, current, false));
+		Direction real = startingPoint.getDir();
+		for (int i = 0; i < current.v; i++)
+			real = Position.rotateLeft(real);
+		
+		float heading = 0;
+		switch (real){
+			case UP: heading = 90f; break;
+			case DOWN: heading = -90f; break;
+			case RIGHT: heading = 0f; break;
+			case LEFT: heading = 180f; break;
+			default: throw new RuntimeException("Invalid direction");
+		}
+		
+		odo.setPose(new Pose(real_x * Main.TILE_WIDTH - Main.TILE_WIDTH /2f, real_y * Main.TILE_WIDTH - Main.TILE_WIDTH /2f, heading));
+		
+		Sound.beep();
+		return observations;	
+	}
+	
+	
+	
 	
 	/********
 	 * Perform Localization using a known map
 	 * 
 	 * @return Number of observations made
+	 * @deprecated
+	 * @since v0
 	 */
-	public int localize() {
+	public int localize_old() {
 		ArrayList<Position> seen = new ArrayList<Position>();
 		
 		ArrayList<Position> possible = generatePossibleStates();
@@ -293,8 +452,14 @@ public class Localizer {
 		return false;
 	}
 	
+	/*****
+	 * Correct using the 
+	 */
 	private void correct(){
+		Pose current = odo.getPose();
 		pilot.travel(OdometryCorrection.lastDistanceCorrection());
-		pilot.rotate(OdometryCorrection.lastHeadingCorrection());}
+		pilot.rotate(OdometryCorrection.lastHeadingCorrection());
+		odo.setPose(current);}
+	
 	
 }

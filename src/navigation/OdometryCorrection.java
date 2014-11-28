@@ -2,7 +2,6 @@ package navigation;
 
 import lejos.nxt.ColorSensor;
 import lejos.nxt.LCD;
-import lejos.nxt.Sound;
 import lejos.robotics.Color;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.Pose;
@@ -108,7 +107,6 @@ public class OdometryCorrection extends Thread {
 				
 				
 				if (sawRight && sawLeft){
-					Sound.beep();
 					sawRight = false;
 					sawLeft = false;
 					double correction = Math.abs(Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2)))) ;
@@ -116,7 +114,7 @@ public class OdometryCorrection extends Thread {
 					LCD.clear(3);
 					lastHeading = leftFirst ? correction : -correction;
 					LCD.drawString(lastHeading + "", 0, 3);
-					double heading = p.getHeading() + (leftFirst ? -correction : correction);
+					double heading = Math.round(p.getHeading()/90f)*90f + (leftFirst ? -correction : correction);
 
 					tempAngle = Math.PI - offset - Math.abs(lastHeading);
 					
@@ -144,7 +142,7 @@ public class OdometryCorrection extends Thread {
 						lastDist = (new_y > p.getY() ? 1 : -1) * (Math.abs(new_y - p.getY()));
 					}
 					
-					lastDist = Math.abs(lastDist) > 7 ? 0 : lastDist;							
+					lastDist = Math.abs(lastDist) > 8 ? 0 : lastDist;							
 					LCD.clear(4);
 					LCD.drawString(lastDist + "", 0, 4);
 				}

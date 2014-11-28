@@ -1,7 +1,6 @@
 package main;
 
 import java.util.BitSet;
-
 import lejos.nxt.Button;
 import lejos.nxt.ButtonListener;
 import lejos.nxt.ColorSensor;
@@ -318,16 +317,8 @@ public class Main {
 		// Instantiate a new blockRescuer
 		blockRescuer = new BlockRescuer(pilot, nav, ULTRASONIC, arm);
 		odoCorrection.start();
-//		OdometryCorrection.enable();
-		display.start();
-		odo.setPose(new Pose(-Main.TILE_WIDTH/2f, -Main.TILE_WIDTH/2f, 0));
+		OdometryCorrection.enable();
 		
-		blockRescuer.rescueBlock();
-		arm.drop();
-		
-		
-		
-		System.exit(0);
 		Display.setCurrentAction(Display.Action.LOCALIZING);
 		localizer.localize();
 		
