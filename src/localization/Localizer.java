@@ -140,16 +140,16 @@ public class Localizer {
 			
 			// Check if we've been where we are before
 			if (contains(seen, new Position(x, y, null, false))){
-				boolean isBlocked = getFilteredData() < (Main.TILE_WIDTH);
+				boolean isBlocked = getBlockedStatus();
 				
 				if (isBlocked || (contains(seen, forward(new Position(x, y, current, false))) && !secondPass)){
 					pilot.rotate(-90);
 					current = Position.rotateRight(current);
-					isBlocked = getFilteredData() < Main.TILE_WIDTH;
+					isBlocked = getBlockedStatus();
 					if (isBlocked || (contains(seen, forward(new Position(x, y, current, false))) && !secondPass)){
 						pilot.rotate(180);
 						current = Position.rotateLeft(Position.rotateLeft(current));
-						isBlocked = getFilteredData() < Main.TILE_WIDTH;
+						isBlocked = getBlockedStatus();
 						if (isBlocked && !secondPass){
 							secondPass = true;
 							pilot.rotate(-90);
@@ -168,12 +168,12 @@ public class Localizer {
 					case UP: y++; break;
 					default: throw new RuntimeException("Shouldn't Happen");
 				}
-				correct();
+				if (possible.size() != 1) correct();
 			}
 			secondPass = false;
 			
 			boolean  leftBlocked, rightBlocked,
-				isBlocked = getFilteredData() < (Main.TILE_WIDTH);
+				isBlocked =getBlockedStatus();
 			
 			observations++;
 			Position me = new Position(x, y, current, isBlocked);
@@ -191,7 +191,7 @@ public class Localizer {
 			
 			pilot.rotate(-90);
 			current = Position.rotateRight(current);
-			rightBlocked = getFilteredData() < (Main.TILE_WIDTH);
+			rightBlocked = getBlockedStatus();
 			
 			observations++;
 			me = new Position(x, y, current, rightBlocked);
@@ -210,7 +210,7 @@ public class Localizer {
 			
 			pilot.rotate(180);
 			current = Position.rotateLeft(Position.rotateLeft(current));
-			leftBlocked = getFilteredData() < Main.TILE_WIDTH;
+			leftBlocked = getBlockedStatus();
 			
 			observations++;
 			me = new Position(x, y, current, leftBlocked);
@@ -246,7 +246,7 @@ public class Localizer {
 				case UP: y++; break;
 				default: throw new RuntimeException("Shouldn't Happen");
 			}
-			correct();
+			if (possible.size() != 1) correct();
 		}
 
 		if (possible.size() != 1) localize();		// restart if error
@@ -274,9 +274,19 @@ public class Localizer {
 		return observations;	
 	}
 	
-	
-	
-	
+	/****
+	 * Method to return whether the robot is currently blocked in the forward direction.
+	 * Factored out to allow for changing of threshold in a central location.
+	 * 
+	 * @since v4
+	 * 
+	 * @see #getFilteredData()
+	 * @return true iff the robot is currently blocked in the forward direction.
+	 */
+	private boolean getBlockedStatus() {
+		return getFilteredData() < Main.TILE_WIDTH * 2f/3f;
+	}
+
 	/********
 	 * Perform Localization using a known map
 	 * 
@@ -334,7 +344,7 @@ public class Localizer {
 					if (!contains(seen, new Position(x, y, null, false)))
 						foundNewSpot = true;
 					
-					correct();
+					if (possible.size() != 1) correct();
 				}
 			lejos.util.Delay.msDelay(300);
 			}	
@@ -378,6 +388,7 @@ public class Localizer {
 	 * Check whether a position r is possible from position s
 	 * @param s The starting position to use as a 'base'
 	 * @param r Where the robot is relative to where it started (current observation)
+	 * @see Position
 	 * @return True iff the position the position r is possible relative to position s
 	 */
 	private boolean valid(Position s, Position r){
@@ -421,7 +432,7 @@ public class Localizer {
 	/****
 	 * Get the position 1 forward from the position p. No error checking on the
 	 * validity of the position is performed. 
-	 * 
+	 * @see Position
 	 * @param p The starting position
 	 * @return The position 1 forward from p
 	 */
@@ -439,8 +450,6 @@ public class Localizer {
 	 * Check whether the Position p is containined in the ArrayList seen. A
 	 * position is considered contained within seen iff the X and Y coordinates
 	 * are equal
-	 * 
-	 * 
 	 * @param seen The arraylist of positions to check from
 	 * @param p The position to check for
 	 * @return true iff the p is contained with seen, otherwise false
@@ -453,7 +462,10 @@ public class Localizer {
 	}
 	
 	/*****
-	 * Correct using the 
+	 * Correct using the values provided from the OdometryCorrection class.
+	 * 
+	 * @since v4
+	 * @see OdometryCorrection
 	 */
 	private void correct(){
 		Pose current = odo.getPose();

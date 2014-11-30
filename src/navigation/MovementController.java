@@ -19,7 +19,6 @@ import lejos.robotics.pathfinding.PathFinder;
 import main.Display;
 import main.Main;
 
-
 /**
  * Movement controller that finds a path using a given map and travels there.
  * 

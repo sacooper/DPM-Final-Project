@@ -1,6 +1,7 @@
 package main;
 
 import java.util.BitSet;
+
 import lejos.nxt.Button;
 import lejos.nxt.ButtonListener;
 import lejos.nxt.ColorSensor;
@@ -46,13 +47,12 @@ public class Main {
 	private static Display display;
 	private static OdometryCorrection odoCorrection;
 	private static Arm arm;
-	private static long start;		// TODO: INITIALIZE AND USE
+	private static long start, time;		// TODO: INITIALIZE AND USE
 	
 	public static final float	 
 		LEFT_WHEEL_D = 4.155f,
 		RIGHT_WHEEL_D = 4.155f,
-//		WHEEL_BASE = 17.525f,
-		WHEEL_BASE = 18.05f,		
+		WHEEL_BASE = 17.95f,		
 		TILE_WIDTH = 30.48f;
 	
 	public static final int
@@ -287,12 +287,13 @@ public class Main {
 		
 		
 		Button.waitForAnyPress();
-		
+		start = System.currentTimeMillis();
+		time = -1;
 		
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
-		pilot.setAcceleration(500);
-		pilot.setTravelSpeed(22);
+		pilot.setAcceleration(15);
+		pilot.setTravelSpeed(20);
 		pilot.setRotateSpeed(90);
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
@@ -301,6 +302,7 @@ public class Main {
 		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
 		
 		display = new Display(odo);
+		display.start();
 		
 		// Instantiate a new Localizer
 		localizer = new Localizer(pilot, ULTRASONIC, odo);
@@ -323,26 +325,51 @@ public class Main {
 		localizer.localize();
 		
 		OdometryCorrection.enable();
-		Display.setCurrentAction(Display.Action.MOVING);
-//		moveController.travelToWaypoint(new Waypoint(Main.TILE_WIDTH, 2.5*Main.TILE_WIDTH, 0));
-		
+		long x = System.currentTimeMillis();
 		blockPickupArea();
 		moveController.regenerate();
-		moveController.travelToTile(1, 2, -90);
-		unblockPickupArea();
-		moveController.regenerate();
-		pilot.travel(odo.getPose().getY() - Main.TILE_WIDTH);	// Move to top of current tile
 		
-		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-		blockRescuer.rescueBlock();
-		
-		Display.setCurrentAction(Display.Action.MOVING);
-		moveController.travelToTile((int)dropoff.getX(), (int)dropoff.getY(), (float)dropoff.getHeading());
+		while (shouldContinue()){
+			Display.setCurrentAction(Display.Action.MOVING);
+			moveController.travelToTile(1, 2, -90);
+			
+			new Thread(new Runnable(){
+				public void run(){
+					unblockPickupArea();
+					moveController.regenerate();
+				}
+			}).start();
+			
+			pilot.travel(odo.getPose().getY() - Main.TILE_WIDTH);	// Move to top of current tile
+			
+			Display.setCurrentAction(Display.Action.BLOCK_ACTION);
+			blockRescuer.rescueBlock();
+			
+			Display.setCurrentAction(Display.Action.MOVING);
+			moveController.travelToTile(1,  2);
+			moveController.travelToTile(0, 2);
+			moveController.travelToTile((int)dropoff.getX(), (int)dropoff.getY(), (float)dropoff.getHeading());
+	
+			pilot.travel(Main.TILE_WIDTH/1.5f);
+			                  
+			Display.setCurrentAction(Display.Action.BLOCK_ACTION);
+			
+			new Thread(new Runnable(){
+				public void run(){
+					blockPickupArea();
+					moveController.regenerate();
+				}
+			}).start();
+			
+			arm.drop();
+			if (time == -1)
+				time = 2 * (System.currentTimeMillis() - x);
+		}
+		System.exit(0);
+	}
 
-		pilot.travel(-Main.TILE_WIDTH/2f);
-		                  
-		Display.setCurrentAction(Display.Action.BLOCK_ACTION);
-		arm.drop();
+	private static boolean shouldContinue() {
+		return time == -1 ? true : (7*60 + 30)*1000 + start - System.currentTimeMillis() > time; 
 	}
 
 	/****
@@ -502,18 +529,18 @@ public class Main {
 			
 		} while (option != Button.ID_ENTER);
 		
-		int ang = 0;
+//		int ang = 0;
 		
 		if (x-1 >= 0 && !maps[mapNumber].get((x-1)*Main.NUM_TILES + y))
-			ang = 0;
+			dropoff = new Waypoint(x-1, y, 0); // ang = 0;
 		else if (x + 1 < Main.NUM_TILES && !maps[mapNumber].get((x+1)*Main.NUM_TILES + y))
-			ang = 180;
+			dropoff = new Waypoint(x+1, y, 180); // ang = 180;
 		else if (y - 1 >= 0 && !maps[mapNumber].get(x*Main.NUM_TILES + y - 1))
-			ang = 90;
+			dropoff = new Waypoint(x, y-1, 90); // ang = 90;
 		else
-			ang = -90;
+			dropoff = new Waypoint(x, y+1, -90); // ang = -90;
 		
-		dropoff = new Waypoint(x, y, ang);
+//		dropoff = new Waypoint(x, y, ang);
 		
 	}
 	

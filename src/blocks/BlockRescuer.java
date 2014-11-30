@@ -49,6 +49,10 @@ public class BlockRescuer {
 		// Stage 2: Pick up block
 		arm.lowerArm();
 		pilot.travel(dist);
+		pilot.rotate(-15);
+		pilot.rotate(30);
+		pilot.rotate(-15);
+		pilot.travel(4);
 		arm.raise_with_rev();
 		OdometryCorrection.enable();
 		pilot.setRotateSpeed(old_r);
@@ -65,13 +69,14 @@ public class BlockRescuer {
 		int count = 0;
 		boolean foundBlock = false;
 		byte tryCount = 0;
+		int ang = 0;
 		while (!foundBlock){
 			if (tryCount < 2){
 				while (!foundBlock && count < 6) {
 					pilot.rotate(SWEEP);
 					int lastDistance = getFilteredData();
 					int current = lastDistance;
-					int ang = 0;
+					ang = 0;
 					while(ang < SWEEP*2){
 						pilot.rotate(-5);
 						ang += 5;
@@ -106,10 +111,16 @@ public class BlockRescuer {
 				pilot.rotate(-90);
 				return (int) (Main.TILE_WIDTH*1.5f);
 			}
-			
 		}
-		pilot.rotate(-15);
-		nav.rotateTo(Math.round(nav.getPoseProvider().getPose().getHeading() / 90f) * 90f);
+		
+		if (ang < 25)	// 0, 5, 10, 15, 20
+			nav.rotateTo(-80);
+		else if (ang < 50 ) // 20, 25, 30, 35, 40, 45
+			nav.rotateTo(-90);
+		else	// 50, 55, 60, 65, 70
+			nav.rotateTo(-100);
+//		pilot.rotate(-15);
+//		nav.rotateTo(Math.round(nav.getPoseProvider().getPose().getHeading() / 90f) * 90f);
 		pilot.travel(-24);
 		return dist + 13;
 	}

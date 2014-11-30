@@ -26,11 +26,11 @@ public class OdometryCorrection extends Thread {
 	private static double lastHeading, lastDist;
 	
 	private static boolean enabled;
-	private final static double X_OFFSET = 3.4, 
+	private final static double X_OFFSET = 3.75, 
 								Y_OFFSET = 3.25,
 								THRESHOLD = 11;
 
-	private OdometryPoseProvider odometer;
+	private static OdometryPoseProvider odometer;
 	private ColorSensor leftCS, rightCS;
 	
 
@@ -42,7 +42,7 @@ public class OdometryCorrection extends Thread {
 	 * @param rightCS 	The right <code>ColorSensor</code>that is used to check grid lines
 	 */
 	public OdometryCorrection(OdometryPoseProvider odometer, ColorSensor leftCS, ColorSensor rightCS) {		
-		this.odometer = odometer;
+		OdometryCorrection.odometer = odometer;
 		this.leftCS = leftCS;
 		this.rightCS = rightCS;
 		enabled = false;
@@ -109,6 +109,7 @@ public class OdometryCorrection extends Thread {
 				if (sawRight && sawLeft){
 					sawRight = false;
 					sawLeft = false;
+					OdometryCorrection.last = new Pose(p.getX(), p.getY(), p.getHeading());
 					double correction = Math.abs(Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2)))) ;
 
 					LCD.clear(3);
@@ -196,11 +197,17 @@ public class OdometryCorrection extends Thread {
 	 * @return The amount the distance needs to be corrected
 	 */
 	public static double lastDistanceCorrection(){
-		double temp = lastDist;
-		lastDist = 0;
-		return temp;}
+//		double temp = lastDist;
+//		lastDist = 0;
+//		return temp;
+		if (last == null) return 0;
+		double off = last.distanceTo(odometer.getPose().getLocation()) - Main.TILE_WIDTH/2f - Y_OFFSET;
+		last = null;
+		return (off > Main.TILE_WIDTH/3f) ? 0 : -off;
+//		return -(last.distanceTo(odometer.getPose().getLocation()) - Main.TILE_WIDTH/2f - Y_OFFSET);
+	}
 	
-	
+	private static Pose last;
 
 
 }
