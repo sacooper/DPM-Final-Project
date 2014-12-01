@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 
-import lejos.nxt.Button;
-import lejos.nxt.LCD;
 import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;

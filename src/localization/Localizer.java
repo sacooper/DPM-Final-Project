@@ -4,16 +4,13 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 
-import navigation.OdometryCorrection;
-import lejos.nxt.Button;
-import lejos.nxt.LCD;
 import lejos.nxt.Sound;
 import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Pose;
-import main.Display;
 import main.Main;
+import navigation.OdometryCorrection;
 
 /*******
  * Localize using a known map. Once completed, the <code>OdometeryPoseProvider</code> passed in

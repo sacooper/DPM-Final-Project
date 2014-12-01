@@ -13,7 +13,6 @@ import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.navigation.Navigator;
-import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
 import localization.Localizer;
 import navigation.MovementController;
@@ -418,10 +417,18 @@ public class Main {
 		setBlock(5, 10, 5, true);
 		setBlock(5, 10, 10, true);
 		
-		
+		/*************************************/
 		
 	}
 
+	/*****
+	 * Set the status of a coordinate for a given map
+	 * 
+	 * @param map The map number of this point
+	 * @param x The x coordinate of this point
+	 * @param y The y coordinate of this point
+	 * @param v The value at this point. True implies blocked, false implies not blocked.
+	 */
 	private static void setBlock(int map, int x, int y, boolean v){
 		if (maps==null) throw new RuntimeException("Maps not initialized");
 		if (map >= maps.length) throw new RuntimeException("Invalid map number");
