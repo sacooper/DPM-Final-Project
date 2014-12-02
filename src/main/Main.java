@@ -51,7 +51,7 @@ public class Main {
 	public static final float	 
 		LEFT_WHEEL_D = 4.155f,
 		RIGHT_WHEEL_D = 4.1645f,
-		WHEEL_BASE = 17.95f,		
+		WHEEL_BASE = 17.835f,		
 		TILE_WIDTH = 30.48f;
 	
 	public static final int
@@ -76,6 +76,7 @@ public class Main {
 		pilot.setAcceleration(15);
 		pilot.setTravelSpeed(20);
 		pilot.setRotateSpeed(90);
+
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
 		

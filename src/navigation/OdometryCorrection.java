@@ -25,7 +25,7 @@ public class OdometryCorrection extends Thread {
 	private static double lastHeading;
 	
 	private static boolean enabled;
-	private final static double X_OFFSET = 3.6, 
+	private final static double X_OFFSET = 3, 	//3.6
 								Y_OFFSET = 3.25,
 								THRESHOLD = 11;
 

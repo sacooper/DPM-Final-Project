@@ -281,8 +281,8 @@ public class Localizer {
 	 */
 	private boolean getBlockedStatus() {
 		for (int i = 0; i < 4; i++){
-			boolean ping1 = getFilteredData() < Main.TILE_WIDTH * 3f/4f;
-			boolean ping2 = getFilteredData() < Main.TILE_WIDTH * 3f/4f;
+			boolean ping1 = getFilteredData() < Main.TILE_WIDTH * 2f/3f;
+			boolean ping2 = getFilteredData() < Main.TILE_WIDTH * 2f/3f;
 			
 			if (ping1 == ping2)
 				return ping1;
@@ -473,8 +473,18 @@ public class Localizer {
 	 */
 	private void correct(){
 		Pose current = odo.getPose();
-		pilot.travel(OdometryCorrection.lastDistanceCorrection());
-		pilot.rotate(OdometryCorrection.lastHeadingCorrection());
+		double ang = OdometryCorrection.lastHeadingCorrection();
+		double dist = OdometryCorrection.lastDistanceCorrection();
+		
+		
+		if (dist > 0){
+			pilot.rotate(ang);
+			pilot.travel(dist);
+		} else {
+			pilot.rotate(-ang);
+			pilot.travel(dist);
+			pilot.rotate(2*ang);
+		}
 		odo.setPose(current);}
 	
 	

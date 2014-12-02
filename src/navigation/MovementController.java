@@ -217,8 +217,18 @@ public class MovementController{
 			nav.goTo(way);
 			nav.waitForStop();
 			Pose pose = nav.getPoseProvider().getPose();
-			Main.getPilot().travel(OdometryCorrection.lastDistanceCorrection());
-			Main.getPilot().rotate(OdometryCorrection.lastHeadingCorrection());
+			double ang = OdometryCorrection.lastHeadingCorrection();
+			double dist = OdometryCorrection.lastDistanceCorrection();
+			
+			
+			if (dist > 0){
+				Main.getPilot().rotate(ang);
+				Main.getPilot().travel(dist);
+			} else {
+				Main.getPilot().rotate(-ang);
+				Main.getPilot().travel(dist);
+				Main.getPilot().rotate(2*ang);
+			}
 			nav.getPoseProvider().setPose(pose);
 			Display.printLocation(nav.getPoseProvider().getPose());
 //			Button.waitForAnyPress();

@@ -49,6 +49,12 @@ public class BlockRescuer {
 		// Stage 2: Pick up block
 		arm.lowerArm();
 		pilot.travel(dist);
+		
+		pilot.arc(-Main.WHEEL_BASE/2f, -30);
+		pilot.arc(Main.WHEEL_BASE/2f, 60);
+		pilot.arc(-Main.WHEEL_BASE/2f, -30);
+		pilot.travel(6);
+		
 //		pilot.rotate(-15);
 //		pilot.rotate(30);
 //		pilot.rotate(-15);
