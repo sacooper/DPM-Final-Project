@@ -47,22 +47,21 @@ public class Main {
 	private static OdometryCorrection odoCorrection;
 	private static Arm arm;
 	private static long start, time; 
-	private static boolean started;
 	
 	public static final float	 
 		LEFT_WHEEL_D = 4.155f,
-		RIGHT_WHEEL_D = 4.155f,
+		RIGHT_WHEEL_D = 4.1645f,
 		WHEEL_BASE = 17.95f,		
 		TILE_WIDTH = 30.48f;
 	
 	public static final int
-		NUM_TILES = 12;
+		NUM_TILES = 12;		// XXX
 	
 	// List of maps for use in competition
 	// usage: maps[map_number][x][y]
 	private static final BitSet[] maps;
 
-	private static final int NUM_MAPS = 6;
+	private static final int NUM_MAPS = 6;	// XXX
 	private static int mapNumber = 0;
 	private static Waypoint dropoff = null;
 	
@@ -72,23 +71,6 @@ public class Main {
 	private Main(){};
 	
 	public static void main(String[] args) {
-		setup();
-		
-		LCD.clear();
-		
-		for (int x = 0; x < Main.NUM_TILES; x++){
-			for (int y = 0; y < Main.NUM_TILES; y++){
-				if (getCurrentMap().get(x * Main.NUM_TILES + y))
-					LCD.drawChar('X', x, Main.NUM_TILES - 1 - y);
-			}
-		}
-		
-		
-		while (Button.waitForAnyPress() != Button.ID_ENTER);
-		started = true;
-		start = System.currentTimeMillis();
-		time = -1;
-		
 		// Instantiate a new DifferentialPilot to control movement
 		pilot = new DifferentialPilot(LEFT_WHEEL_D, RIGHT_WHEEL_D, WHEEL_BASE, MOTOR_LEFT, MOTOR_RIGHT, false);
 		pilot.setAcceleration(15);
@@ -97,11 +79,10 @@ public class Main {
 		// Instantiate a new OdometryPoseProvider, of maintaining current pose
 		odo = new OdometryPoseProvider(pilot);
 		
-		// Instantate a new OdometryCorrection and disable it
+		// Instantiate a new OdometryCorrection and disable it
 		odoCorrection = new OdometryCorrection(odo, COLORSENSOR_LEFT, COLORSENSOR_RIGHT);
 		
 		display = new Display(odo);
-		display.start();
 		
 		// Instantiate a new Localizer
 		localizer = new Localizer(pilot, ULTRASONIC, odo);
@@ -113,10 +94,30 @@ public class Main {
 		moveController = new MovementController(nav);
 
 		// Instantiate a new Arm for controlling claw movement
+		ARM.setAcceleration(200);
+		ARM.setSpeed(360);
 		arm = new Arm(ARM, Arm.ArmState.RAISED);
 		
 		// Instantiate a new blockRescuer
 		blockRescuer = new BlockRescuer(pilot, nav, ULTRASONIC, arm);
+		
+		setup();		
+		LCD.clear();
+		
+		
+		for (int x = 0; x < Main.NUM_TILES; x++){
+			for (int y = 0; y < Main.NUM_TILES; y++){
+				if (getCurrentMap().get(x * Main.NUM_TILES + y))
+					LCD.drawChar('X', x, Main.NUM_TILES - 1 - y);
+			}
+		}
+		
+		
+		while (Button.waitForAnyPress() != Button.ID_ENTER);
+		start = System.currentTimeMillis();
+		time = -1;
+		
+		display.start();
 		odoCorrection.start();
 		OdometryCorrection.enable();
 		
@@ -125,8 +126,6 @@ public class Main {
 		
 		OdometryCorrection.enable();
 		long x = System.currentTimeMillis();
-		blockPickupArea();
-		moveController.regenerate();
 		
 		while (shouldContinue()){
 			Display.setCurrentAction(Display.Action.MOVING);
@@ -145,12 +144,9 @@ public class Main {
 			blockRescuer.rescueBlock();
 			
 			Display.setCurrentAction(Display.Action.MOVING);
-			moveController.travelToTile(1,  2);
-			moveController.travelToTile(0, 2);
 			moveController.travelToTile((int)dropoff.getX(), (int)dropoff.getY(), (float)dropoff.getHeading());
 	
-			pilot.travel(Main.TILE_WIDTH/1.5f);
-			                  
+			pilot.travel(Main.TILE_WIDTH/4f);
 			Display.setCurrentAction(Display.Action.BLOCK_ACTION);
 			
 			new Thread(new Runnable(){
@@ -189,15 +185,13 @@ public class Main {
 		return maps[getMapNumber()];
 	}
 	
-	static {
-		started = false;
-		
+	static {		
 		// Add button listener to escape button to allow for exiting at any time
 		Button.ESCAPE.addButtonListener(
 				new ButtonListener(){
 					@Override
 					public void buttonPressed(Button b) {
-						if (started && b.getId() == Button.ID_ESCAPE) System.exit(0);}
+						if (b.getId() == Button.ID_ESCAPE) System.exit(0);}
 		
 					@Override
 					public void buttonReleased(Button b) {}});
@@ -210,7 +204,7 @@ public class Main {
 					maps[i] = new BitSet(Main.NUM_TILES * Main.NUM_TILES);
 					maps[i].clear();}}}
 	
-	/**********************************************/
+	/**********************************************=
 		// The follow are for beta demonstrations
 		
 		// setBlock(map #, x, y, isBlocked)
@@ -266,7 +260,7 @@ public class Main {
 		setBlock(2, 7, 4, true);
 		setBlock(2, 7, 6, true);
 		
-	/**********************************************/
+	**********************************************/
 		
 	/**************************************************
 	 * The follow maps are for the FINAL DEMONSTRATION
@@ -274,52 +268,52 @@ public class Main {
 		
 		
 		// Map 1
-		setBlock(0, 0, 6, true);
-		setBlock(0, 0, 9, true);
-		setBlock(0, 1, 3, true);
-		setBlock(0, 2, 2, true);
-		setBlock(0, 2, 11, true);
-		setBlock(0, 3, 5, true);
-		setBlock(0, 3, 10, true);
-		setBlock(0, 4, 4, true);
-		setBlock(0, 4, 6, true);
-		setBlock(0, 5, 0, true);
-		setBlock(0, 5, 2, true);
-		setBlock(0, 6, 3, true);
-		setBlock(0, 7, 7, true);
-		setBlock(0, 8, 0, true);
-		setBlock(0, 8, 1, true);
-		setBlock(0, 8, 6, true);
-		setBlock(0, 9, 4, true);
-		setBlock(0, 9, 7, true);
-		setBlock(0, 9, 9, true);
-		setBlock(0, 10, 2, true);
-		setBlock(0, 10, 6, true);
-		setBlock(0, 11, 1, true);
+		setBlock(0, 0, 6, true); //
+		setBlock(0, 0, 9, true); //
+		setBlock(0, 1, 3, true); //
+		setBlock(0, 2, 2, true); //
+		setBlock(0, 2, 11, true); //
+		setBlock(0, 3, 5, true); //
+		setBlock(0, 3, 10, true); //
+		setBlock(0, 4, 4, true); //
+		setBlock(0, 4, 7, true); //
+		setBlock(0, 5, 0, true); //
+		setBlock(0, 5, 2, true); //
+		setBlock(0, 6, 3, true); //
+		setBlock(0, 7, 7, true); //
+		setBlock(0, 8, 0, true); //
+		setBlock(0, 8, 1, true); //
+		setBlock(0, 8, 6, true); //
+		setBlock(0, 9, 4, true); //
+		setBlock(0, 9, 7, true); //
+		setBlock(0, 9, 9, true); //
+		setBlock(0, 10, 2, true);// 
+		setBlock(0, 10, 6, true);//
+		setBlock(0, 11, 1, true);//
 		
 		// Map 2
-		setBlock(1, 0, 4, true);
-		setBlock(1, 0, 5, true);
-		setBlock(1, 3, 2, true);
-		setBlock(1, 3, 5, true);
-		setBlock(1, 3, 6, true);
-		setBlock(1, 3, 9, true);
-		setBlock(1, 4, 5, true);
-		setBlock(1, 4, 9, true);
-		setBlock(1, 4, 10, true);
-		setBlock(1, 5, 5, true);
-		setBlock(1, 6, 8, true);
-		setBlock(1, 6, 9, true);
-		setBlock(1, 7, 0, true);
-		setBlock(1, 8, 4, true);
-		setBlock(1, 8, 5, true);
-		setBlock(1, 8, 10, true);
-		setBlock(1, 9, 1, true);
-		setBlock(1, 9, 11, true);
-		setBlock(1, 10, 7, true);
-		setBlock(1, 11, 2, true);
-		setBlock(1, 11, 5, true);
-		setBlock(1, 11, 7, true);
+		setBlock(1, 0, 4, true); //
+		setBlock(1, 0, 5, true); //
+		setBlock(1, 3, 2, true); //
+		setBlock(1, 3, 5, true); //
+		setBlock(1, 3, 6, true); //
+		setBlock(1, 3, 9, true); //
+		setBlock(1, 4, 5, true); //
+		setBlock(1, 4, 9, true); //
+		setBlock(1, 4, 10, true); //
+		setBlock(1, 5, 5, true); //
+		setBlock(1, 6, 8, true); //
+		setBlock(1, 6, 9, true); //
+		setBlock(1, 7, 0, true); //
+		setBlock(1, 8, 4, true); //
+		setBlock(1, 8, 5, true); //
+		setBlock(1, 8, 10, true); //
+		setBlock(1, 9, 1, true); //
+		setBlock(1, 9, 11, true); //
+		setBlock(1, 10, 7, true); //
+		setBlock(1, 11, 2, true); //
+		setBlock(1, 11, 5, true); //
+		setBlock(1, 11, 7, true); //
 
 		// Map 3
 		setBlock(2, 0, 3, true);
@@ -394,28 +388,28 @@ public class Main {
 		setBlock(4, 11, 9, true);
 		
 		// Map 6
-		setBlock(5, 0, 10, true);
-		setBlock(5, 1, 5, true);
-		setBlock(5, 2, 3, true);
-		setBlock(5, 3, 2, true);
-		setBlock(5, 3, 10, true);
-		setBlock(5, 4, 2, true);
-		setBlock(5, 4, 7, true);
-		setBlock(5, 5, 2, true);
-		setBlock(5, 5, 4, true);
-		setBlock(5, 5, 7, true);
-		setBlock(5, 5, 11, true);
-		setBlock(5, 6, 5, true);
-		setBlock(5, 6, 9, true);
-		setBlock(5, 7, 6, true);
-		setBlock(5, 7, 8, true);
-		setBlock(5, 8, 2, true);
-		setBlock(5, 8, 10, true);
-		setBlock(5, 9, 0, true);
-		setBlock(5, 9, 4, true);
-		setBlock(5, 9, 8, true);
-		setBlock(5, 10, 5, true);
-		setBlock(5, 10, 10, true);
+		setBlock(5, 0, 10, true); //
+		setBlock(5, 1, 5, true); //
+		setBlock(5, 2, 3, true); //
+		setBlock(5, 3, 2, true); //
+		setBlock(5, 3, 10, true); //
+		setBlock(5, 4, 2, true); //
+		setBlock(5, 4, 7, true); //
+		setBlock(5, 5, 2, true); //
+		setBlock(5, 5, 4, true); //
+		setBlock(5, 5, 6, true); // it was setBlock(5, 5, 7, true); 
+		setBlock(5, 5, 11, true); //
+		setBlock(5, 6, 5, true);  //
+		setBlock(5, 6, 9, true); //
+		setBlock(5, 7, 6, true); //
+		setBlock(5, 7, 8, true); //
+		setBlock(5, 8, 2, true); //
+		setBlock(5, 8, 10, true); //
+		setBlock(5, 9, 0, true); //
+		setBlock(5, 9, 4, true); //
+		setBlock(5, 9, 8, true); //
+		setBlock(5, 10, 5, true); //
+		setBlock(5, 10, 10, true); //
 		
 		/*************************************/
 		
@@ -452,11 +446,18 @@ public class Main {
 			
 		} while (option != Button.ID_ENTER);
 		
+		blockPickupArea();
+		new Thread(new Runnable(){
+			public void run(){
+				moveController.regenerate();
+			}
+		}).start();
+		
 		do {
 			LCD.clear();
 			LCD.drawString("X: " + x, 0, 0);
 			option = Button.waitForAnyPress();
-			switch (option){
+			switch (option){ 
 			case Button.ID_LEFT: x = (x + (Main.NUM_TILES - 1)) % Main.NUM_TILES; break;
 			case Button.ID_RIGHT: x = (x + 1) % Main.NUM_TILES; break;
 			default: break;

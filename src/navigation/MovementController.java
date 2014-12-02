@@ -54,9 +54,7 @@ public class MovementController{
 		 * 
 		 * @param map The map to base the grid off of
 		 */
-		public Grid(){
-			regenerate();
-		}
+		public Grid(){}
 		
 		/***
 		 * Add a node to this <code>NavigationMesh</code>. Note that 

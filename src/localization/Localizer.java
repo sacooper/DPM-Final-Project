@@ -103,7 +103,6 @@ public class Localizer {
 	 */
 	private int getFilteredData() {
 		int dist;
-
 		// do a ping
 		us_scanner.ping();
 		// wait for the ping to complete
@@ -281,7 +280,15 @@ public class Localizer {
 	 * @return true iff the robot is currently blocked in the forward direction.
 	 */
 	private boolean getBlockedStatus() {
-		return getFilteredData() < Main.TILE_WIDTH * 2f/3f;
+		for (int i = 0; i < 4; i++){
+			boolean ping1 = getFilteredData() < Main.TILE_WIDTH * 3f/4f;
+			boolean ping2 = getFilteredData() < Main.TILE_WIDTH * 3f/4f;
+			
+			if (ping1 == ping2)
+				return ping1;
+		}
+		
+		return getFilteredData() < Main.TILE_WIDTH * 2f / 3f;
 	}
 
 	/********

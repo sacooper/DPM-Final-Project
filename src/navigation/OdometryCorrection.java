@@ -1,7 +1,6 @@
 package navigation;
 
 import lejos.nxt.ColorSensor;
-import lejos.nxt.LCD;
 import lejos.robotics.Color;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.Pose;
@@ -23,10 +22,10 @@ import main.Main;
  */
 
 public class OdometryCorrection extends Thread {
-	private static double lastHeading, lastDist;
+	private static double lastHeading;
 	
 	private static boolean enabled;
-	private final static double X_OFFSET = 3.75, 
+	private final static double X_OFFSET = 3.6, 
 								Y_OFFSET = 3.25,
 								THRESHOLD = 11;
 
@@ -56,37 +55,29 @@ public class OdometryCorrection extends Thread {
 	 * {@inheritDoc}
 	 */
 	public void run() {
-		// Variables
-		double tempAngle = 0;
-
-		// 	Calculate the hypotenuse, as well as the angle offset for both the left and right
-		//	ColorSensors.
-		final double hypotenuse = Math.sqrt(X_OFFSET*X_OFFSET + Y_OFFSET*Y_OFFSET);
-		final double offset = Math.atan(Y_OFFSET/X_OFFSET);
-
 		leftCS.setFloodlight(Color.RED);
 		rightCS.setFloodlight(Color.RED);
 		
-		int lastColorLeft = -1, lastColorRight = -1;
+		int lastColorLeft = -1, lastColorRight = -1, newColorLeft = -1, newColorRight = -1;
 		boolean leftFirst = false;
 		boolean sawLeft = false, sawRight = false;
 		Pose lastPose = null;
 		
 		//	This while loop is used to check if either of the ColorSensors crosses a grid line.
 		// 	If one does, it updates the odometer. It only does this when the robot is not turning.
-
+		lastColorLeft = leftCS.getNormalizedLightValue();
+		lastColorRight = rightCS.getNormalizedLightValue();
+		Pose p;
+		
 		while (true) {
-			int newColorLeft = leftCS.getNormalizedLightValue(), 
-				newColorRight = rightCS.getNormalizedLightValue();
-			
-			if (lastColorLeft == -1) lastColorLeft = newColorLeft;
-			if (lastColorRight == -1) lastColorRight = newColorRight;
+			newColorLeft = leftCS.getNormalizedLightValue(); 
+			newColorRight = rightCS.getNormalizedLightValue();
 			
 			//	The odometry correction only runs if enabled
 			if(enabled){
 				//	If the light value read by the ColorSensor is below the ambient light
 				//	by a percentage, the ColorSensor has crossed a grid line.
-				Pose p = odometer.getPose();
+				p = odometer.getPose();
 				if (lastColorLeft - newColorLeft > THRESHOLD) {
 					if (!sawRight ){
 						lastPose = new Pose(p.getX(), p.getY(), p.getHeading());
@@ -110,42 +101,7 @@ public class OdometryCorrection extends Thread {
 					sawRight = false;
 					sawLeft = false;
 					OdometryCorrection.last = new Pose(p.getX(), p.getY(), p.getHeading());
-					double correction = Math.abs(Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2)))) ;
-
-					LCD.clear(3);
-					lastHeading = leftFirst ? correction : -correction;
-					LCD.drawString(lastHeading + "", 0, 3);
-					double heading = Math.round(p.getHeading()/90f)*90f + (leftFirst ? -correction : correction);
-
-					tempAngle = Math.PI - offset - Math.abs(lastHeading);
-					
-					float new_x, new_y;
-					
-					heading = (heading + 360) % 360;
-					new_y = p.getY();
-					new_x = p.getX();
-					
-					if (heading < 45 || heading >= 315){
-						// Positive x
-						new_x = (float) (getLine(p.getX() + Math.abs(hypotenuse * Math.cos(tempAngle))) - Math.abs(hypotenuse * Math.cos(tempAngle)));
-						lastDist = (new_x > p.getX() ? -1 : 1) * (Math.abs(new_x - p.getX()));
-					} else if (heading >= 45 && heading < 135){
-						// Positive y
-						new_y = (float) (getLine(p.getY() + Math.abs(hypotenuse * Math.cos(tempAngle))) - Math.abs(hypotenuse * Math.cos(tempAngle)));
-						lastDist = (new_y > p.getY() ? -1 : 1) * (Math.abs(new_y - p.getY()));
-					} else if (heading >= 135 && heading < 225){
-						// Negative X
-						new_x = (float) (getLine(p.getX() - Math.abs(hypotenuse * Math.cos(tempAngle))) + Math.abs(hypotenuse * Math.cos(tempAngle)));
-						lastDist = (new_x > p.getX() ? 1 : -1) * (Math.abs(new_x - p.getX()));
-					} else if (heading >= 225 && heading < 315){
-						// Negative Y
-						new_y = (float) (getLine(p.getY() - Math.abs(hypotenuse * Math.cos(tempAngle))) + Math.abs(hypotenuse * Math.cos(tempAngle)));
-						lastDist = (new_y > p.getY() ? 1 : -1) * (Math.abs(new_y - p.getY()));
-					}
-					
-					lastDist = Math.abs(lastDist) > 8 ? 0 : lastDist;							
-					LCD.clear(4);
-					LCD.drawString(lastDist + "", 0, 4);
+					lastHeading = (leftFirst ? 1 : -1 ) * Math.abs(Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2))));
 				}
 
 			}
@@ -154,15 +110,6 @@ public class OdometryCorrection extends Thread {
 			lastColorRight = newColorRight;
 			
 		}
-	}
-	
-	/****
-	 * Find the closest gridline to a coordinate
-	 * @param coordinate coordinate to find gridline closest too
-	 * @return the coordinate of the closest gridline
-	 */
-	private static double getLine(double coordinate) {
-		return Math.round(coordinate / Main.TILE_WIDTH) * Main.TILE_WIDTH;
 	}
 
 	/****
@@ -197,14 +144,10 @@ public class OdometryCorrection extends Thread {
 	 * @return The amount the distance needs to be corrected
 	 */
 	public static double lastDistanceCorrection(){
-//		double temp = lastDist;
-//		lastDist = 0;
-//		return temp;
 		if (last == null) return 0;
 		double off = last.distanceTo(odometer.getPose().getLocation()) - Main.TILE_WIDTH/2f - Y_OFFSET;
 		last = null;
 		return (off > Main.TILE_WIDTH/3f) ? 0 : -off;
-//		return -(last.distanceTo(odometer.getPose().getLocation()) - Main.TILE_WIDTH/2f - Y_OFFSET);
 	}
 	
 	private static Pose last;
