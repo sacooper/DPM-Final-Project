@@ -51,8 +51,6 @@ public class MovementController{
 		
 		/**
 		 * Instantiate a new Grid using the provided map
-		 * 
-		 * @param map The map to base the grid off of
 		 */
 		public Grid(){}
 		

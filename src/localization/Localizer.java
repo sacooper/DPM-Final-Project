@@ -171,6 +171,8 @@ public class Localizer {
 			boolean  leftBlocked, rightBlocked,
 				isBlocked = getBlockedStatus();
 			
+			if (isBlocked)
+				Sound.buzz();
 			observations++;
 			Position me = new Position(x, y, current, isBlocked);
 			Iterator<Position> iter = possible.iterator();
@@ -188,6 +190,9 @@ public class Localizer {
 			pilot.rotate(-90);
 			current = Position.rotateRight(current);
 			rightBlocked = getBlockedStatus();
+			
+			if (rightBlocked)
+				Sound.buzz();
 			
 			observations++;
 			me = new Position(x, y, current, rightBlocked);
@@ -207,6 +212,9 @@ public class Localizer {
 			pilot.rotate(180);
 			current = Position.rotateLeft(Position.rotateLeft(current));
 			leftBlocked = getBlockedStatus();
+			
+			if (leftBlocked)
+				Sound.buzz();
 			
 			observations++;
 			me = new Position(x, y, current, leftBlocked);
