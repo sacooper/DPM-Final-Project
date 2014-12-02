@@ -80,6 +80,7 @@ public class Localizer {
 	 * @return An arraylist of all possible starting positions
 	 */
 	private ArrayList<Position> generatePossibleStates(){
+		this.map = Main.getCurrentMap();
 		ArrayList<Position> possible = new ArrayList<Position>();
 		// Initialize possible states based on map
 		for (byte x = 0; x < Main.NUM_TILES; x++){
