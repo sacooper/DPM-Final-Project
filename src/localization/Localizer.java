@@ -169,7 +169,7 @@ public class Localizer {
 			secondPass = false;
 			
 			boolean  leftBlocked, rightBlocked,
-				isBlocked =getBlockedStatus();
+				isBlocked = getBlockedStatus();
 			
 			observations++;
 			Position me = new Position(x, y, current, isBlocked);

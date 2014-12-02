@@ -259,7 +259,7 @@ public class Main {
 		setBlock(1, 10, 7, true); //
 		setBlock(1, 11, 2, true); //
 		setBlock(1, 11, 5, true); //
-		setBlock(1, 11, 7, true); //
+		setBlock(1, 11, 8, true); //
 
 		// Map 3
 		setBlock(2, 0, 3, true);
