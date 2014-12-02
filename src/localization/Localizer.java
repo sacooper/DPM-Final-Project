@@ -358,12 +358,6 @@ public class Localizer {
 			throw new RuntimeException("No possible states");
 		
 		startingPoint = possible.get(0);
-//		Display.pause();
-//		LCD.clear();
-//		LCD.drawString(startingPoint.getX() + ", " + startingPoint.getY(), 0, 0);
-//		LCD.drawString(startingPoint.getDir().asCardinal(), 0, 1);
-//		Button.waitForAnyPress();
-//		Display.resume();
 		
 		float real_x = Position.relativeX(startingPoint, new Position(x, y, current, false));
 		float real_y = Position.relativeY(startingPoint, new Position(x, y, current, false));

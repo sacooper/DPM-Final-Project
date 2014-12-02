@@ -55,13 +55,13 @@ public class Main {
 		TILE_WIDTH = 30.48f;
 	
 	public static final int
-		NUM_TILES = 12;		// XXX
+		NUM_TILES = 12;
 	
 	// List of maps for use in competition
 	// usage: maps[map_number][x][y]
 	private static final BitSet[] maps;
 
-	private static final int NUM_MAPS = 6;	// XXX
+	private static final int NUM_MAPS = 6;
 	private static int mapNumber = 0;
 	private static Waypoint dropoff = null;
 	
@@ -177,10 +177,11 @@ public class Main {
 		return mapNumber;}
 	
 	/****
-	 * Get the current map as a 2-D array of booleans where TRUE represents that tile
-	 * (map[x][y]) being blocked)
+	 * Get the current map as a bitset where TRUE represents that
+	 * position being blocked. The value at position (X, Y) should be accessed
+	 * via <pre><code>getCurrentMap().get( X * Main.TILE_WIDTH + Y);</code></pre>
 	 * 
-	 * @return A 2-D array representing the current map.
+	 * @return The bitset representing the current map
 	 */
 	public static BitSet getCurrentMap(){
 		return maps[getMapNumber()];
@@ -205,66 +206,10 @@ public class Main {
 					maps[i] = new BitSet(Main.NUM_TILES * Main.NUM_TILES);
 					maps[i].clear();}}}
 	
-	/**********************************************=
-		// The follow are for beta demonstrations
-		
-		// setBlock(map #, x, y, isBlocked)
-		
-		// Initialization of map 0
-		setBlock(0, 0, 5, true);
-		setBlock(0, 1, 7, true);
-		setBlock(0, 2, 4, true);
-		setBlock(0, 2, 6, true);
-		setBlock(0, 2, 7, true);
-		setBlock(0, 3, 5, true);
-		setBlock(0, 4, 1, true);
-		setBlock(0, 4, 2, true);
-		setBlock(0, 4, 3, true);
-		setBlock(0, 6, 2, true);
-		setBlock(0, 6, 5, true);
-		setBlock(0, 7, 0, true);
-		setBlock(0, 7, 2, true);
-		setBlock(0, 7, 3, true);
-		setBlock(0, 7, 6, true);
-		
-		// Initialization of map 1
-		setBlock(1, 0, 5, true);
-		setBlock(1, 1, 6, true);
-		setBlock(1, 2, 0, true);
-		setBlock(1, 2, 3, true);
-		setBlock(1, 2, 4, true);
-		setBlock(1, 3, 1, true);
-		setBlock(1, 3, 7, true);
-		setBlock(1, 4, 4, true);
-		setBlock(1, 4, 6, true);
-		setBlock(1, 4, 7, true);
-		setBlock(1, 5, 0, true);
-		setBlock(1, 7, 0, true);
-		setBlock(1, 7, 1, true);
-		setBlock(1, 7, 6, true);
-		setBlock(1, 7, 7, true);
-		
-		// Initialization of map 2
-		setBlock(2, 0, 7, true);
-		setBlock(2, 2, 3, true);
-		setBlock(2, 2, 6, true);
-		setBlock(2, 3, 2, true);
-		setBlock(2, 3, 3, true);
-		setBlock(2, 3, 4, true);
-		setBlock(2, 3, 6, true);
-		setBlock(2, 4, 0, true);
-		setBlock(2, 4, 7, true);
-		setBlock(2, 5, 0, true);
-		setBlock(2, 5, 5, true);
-		setBlock(2, 6, 4, true);
-		setBlock(2, 7, 0, true);
-		setBlock(2, 7, 4, true);
-		setBlock(2, 7, 6, true);
-		
-	**********************************************/
-		
 	/**************************************************
 	 * The follow maps are for the FINAL DEMONSTRATION
+	 * 
+	 * setBlock(map #, x, y, isBlocked);
 	 ************************************************/
 		
 		
