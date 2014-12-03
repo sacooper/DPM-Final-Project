@@ -21,6 +21,7 @@ import main.Main;
  * Movement controller that finds a path using a given map and travels there.
  * 
  * @author Scott Cooper
+ * @since v0
  */
 public class MovementController{
 	
@@ -35,6 +36,7 @@ public class MovementController{
 	 * provided via the leJOS library
 	 * 
 	 * @author Scott Cooper
+	 * @since v1
 	 */
 	private static class Grid implements NavigationMesh {
 		
@@ -161,6 +163,7 @@ public class MovementController{
 	private Navigator nav;			// Navigator to control movement
 	private PathFinder pathFinder;	// Path finder
 	private Grid grid;
+	
 	/***
 	 * Create a new movement Controller
 	 * 
@@ -172,6 +175,11 @@ public class MovementController{
 		pathFinder = new NodePathFinder(new AstarSearchAlgorithm(), grid);
 	}
 	
+	/****
+	 * Get the coordinate <code>c</code> as a tile number
+	 * @param c The coordinate to find the tile of
+	 * @return
+	 */
 	private static int coordAsTile(double c){
 		return (int)((c + Main.TILE_WIDTH/1.5f) / Main.TILE_WIDTH);
 	}

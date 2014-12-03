@@ -17,6 +17,7 @@ import navigation.OdometryCorrection;
  * during instantiation will be corrected to a known point.
  * 
  * @author Scott Cooper
+ * @since v0
  *
  */
 public class Localizer {
@@ -135,7 +136,7 @@ public class Localizer {
 		
 		while (possible.size() > 1) { // Narrow down list of states until we know where we started
 			
-			// Check if we've been where we are before
+			// Check if we've been where we are before, if so, try to find a new location
 			if (contains(seen, new Position(x, y, null, false))){
 				boolean isBlocked = getBlockedStatus();
 				
@@ -172,6 +173,7 @@ public class Localizer {
 			boolean  leftBlocked, rightBlocked,
 				isBlocked = getBlockedStatus();
 			
+			// Check forward
 			if (isBlocked)
 				Sound.buzz();
 			observations++;
@@ -188,6 +190,7 @@ public class Localizer {
 			
 			/********************************************/
 			
+			// Check right
 			pilot.rotate(-90);
 			current = Position.rotateRight(current);
 			rightBlocked = getBlockedStatus();
@@ -209,7 +212,7 @@ public class Localizer {
 			
 			
 			/********************************************/
-			
+			// Check left
 			pilot.rotate(180);
 			current = Position.rotateLeft(Position.rotateLeft(current));
 			leftBlocked = getBlockedStatus();
@@ -229,6 +232,7 @@ public class Localizer {
 			else if (possible.size() < 1) localize();
 			
 			/********************************************/
+			// Decide where to move
 			
 			if (!leftBlocked && !contains(seen, forward(new Position(x, y, current, false))));
 			else if (!isBlocked && !contains(seen, forward(new Position(x, y, Position.rotateRight(current), false)))){
@@ -305,7 +309,6 @@ public class Localizer {
 	 * 
 	 * @return Number of observations made
 	 * @deprecated
-	 * @since v0
 	 */
 	public int localize_old() {
 		ArrayList<Position> seen = new ArrayList<Position>();

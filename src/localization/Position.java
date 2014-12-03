@@ -1,11 +1,19 @@
 package localization;
 /********
- * Class representing an absolute position.
+ * Class representing a position.
  * 
  * Information include X, Y, cardinal direction,
  * and whether it is blocked. All information 
  * is absolute, relative to the origin (0,0) 
  * with UP = NORTH = positive Y direction
+ * <br><br>
+ * X and Y coordinates are stored as bytes to reduce
+ * memory necessary, thus this class should be modified
+ * in the event that (x or y) < -127 or (x or y) > 128 
+ * 
+ * @author Scott Cooper
+ * @since v1
+ * @see Localizer
  */
 public class Position {
 	private byte x, y;			// X and Y coordinates
@@ -156,10 +164,13 @@ public class Position {
 			throw new RuntimeException("Shouldn't happen");}
 	}
 	
-	@Override
 	/*****
 	 * Check if two positions are equal
+	 * 
+	 * @param o Object to 
+	 * @return true iff the Object <code>o</code> is equal this <code>this</code>
 	 */
+	@Override
 	public boolean equals(Object o){
 		if (o instanceof Position){
 			Position p = (Position)o;

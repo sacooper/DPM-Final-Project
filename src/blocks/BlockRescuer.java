@@ -10,7 +10,7 @@ import navigation.OdometryCorrection;
  * Block rescuer class. All movement of the arm, and finding and 'rescuing' of block occurs here.
  * 
  * @author Scott Cooper
- *
+ * @since v0
  */
 public class BlockRescuer {	
 	private DifferentialPilot pilot;
@@ -55,10 +55,6 @@ public class BlockRescuer {
 		pilot.arc(-Main.WHEEL_BASE/2f, -30);
 		pilot.travel(6);
 		
-//		pilot.rotate(-15);
-//		pilot.rotate(30);
-//		pilot.rotate(-15);
-//		pilot.travel(6);
 		arm.raise_with_rev();
 		OdometryCorrection.enable();
 		pilot.setRotateSpeed(old_r);
@@ -133,8 +129,6 @@ public class BlockRescuer {
 			nav.rotateTo(-90);
 		else	// 50, 55, 60, 65, 70
 			nav.rotateTo(-100);
-//		pilot.rotate(-15);
-//		nav.rotateTo(Math.round(nav.getPoseProvider().getPose().getHeading() / 90f) * 90f);
 		pilot.travel(-24);
 		return dist + 15;
 	}

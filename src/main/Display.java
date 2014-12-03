@@ -10,6 +10,7 @@ import localization.Position;
  * Display to print current heading of the robot. 
  * 
  * @author Scott Cooper
+ * @since v0
  *
  */
 public class Display extends Thread {
@@ -18,6 +19,7 @@ public class Display extends Thread {
 	 * Enum representing the current action the robot is performing
 	 * 
 	 * @author Scott Cooper
+	 * @since v0
 	 */
 	public static enum Action { 
 		/**** The robot is currently localizing */
@@ -42,7 +44,7 @@ public class Display extends Thread {
 	}
 	
 	private static boolean clear, paused;
-	private static final int DELAY = 1000;
+	private static final int DELAY = 100;
 	private static Action currentAction = null;
 	private PoseProvider poseProvider;
 	
@@ -181,8 +183,11 @@ public class Display extends Thread {
 	 * on the most recent change. */
 	public static void resume(){paused=false;}
 
+	/***
+	 * Print the location provided by the <code>Pose</code> pose
+	 * @param pose The <code>Pose</code> to print
+	 */
 	public static void printLocation(Pose pose) {
 		printLocation(pose.getX(), pose.getY(), pose.getHeading());
-		
 	}
 }

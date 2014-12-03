@@ -18,23 +18,25 @@ import main.Main;
  * @see OdometeryPoseProvider
  * 
  * @author Scott Cooper
- *
+ * @since v1
  */
 
 public class OdometryCorrection extends Thread {
-	private static double lastHeading;
+	private static double lastHeadingCorrection;		// Value of the last heading correction
 	
-	private static boolean enabled;
-	private final static double X_OFFSET = 3, 	//3.6
-								Y_OFFSET = 3.25,
-								THRESHOLD = 11;
+	private static boolean enabled;						// Whether odometry correction is enabled
+	private final static double X_OFFSET = 3, 			// X distance of ultrasonic sensors from center
+								Y_OFFSET = 3.25,		// Y distance of ultrasonic sensors from center
+								THRESHOLD = 11;			// Threshold for line detection
 
-	private static OdometryPoseProvider odometer;
-	private ColorSensor leftCS, rightCS;
+	private static OdometryPoseProvider odometer;		// odometer to correct
+	private static Pose last;							// The last position we saw a line at (by both CS)
+	
+	private ColorSensor leftCS, rightCS;				// Left and right color sensors
 	
 
 	/**
-	 * The constructor of the <code>OdometryCorrection</code> initializes instances of the class <code>OdometeryPoseProvider</code>.
+	 * The constructor of the <code>OdometryCorrection</code>.
 	 * 
 	 * @param odometer 	The <code>OdometeryPoseProvider</code> that is used for the robot
 	 * @param leftCS 	The left <code>ColorSensor</code> that is used to check grid lines
@@ -75,9 +77,9 @@ public class OdometryCorrection extends Thread {
 			
 			//	The odometry correction only runs if enabled
 			if(enabled){
-				//	If the light value read by the ColorSensor is below the ambient light
-				//	by a percentage, the ColorSensor has crossed a grid line.
 				p = odometer.getPose();
+				
+				// Check if we detected a line on the left side
 				if (lastColorLeft - newColorLeft > THRESHOLD) {
 					if (!sawRight ){
 						lastPose = new Pose(p.getX(), p.getY(), p.getHeading());
@@ -85,8 +87,7 @@ public class OdometryCorrection extends Thread {
 					}
 					sawLeft = true;
 				}
-				//	The following if statement is nearly identical to the one above. The right 
-				//	ColorSensor is polled instead of the left one.
+				//	Check if we detected a line on the right side
 				if (lastColorRight - newColorRight > THRESHOLD) {
 					if (!sawLeft){
 						lastPose = new Pose(p.getX(), p.getY(), p.getHeading());
@@ -96,16 +97,17 @@ public class OdometryCorrection extends Thread {
 					
 				}
 				
-				
+				// Once we've detected a line on both sides, calculate heading correction and save position
 				if (sawRight && sawLeft){
 					sawRight = false;
 					sawLeft = false;
 					OdometryCorrection.last = new Pose(p.getX(), p.getY(), p.getHeading());
-					lastHeading = (leftFirst ? 1 : -1 ) * Math.abs(Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2))));
+					lastHeadingCorrection = (leftFirst ? 1 : -1 ) * Math.abs(Math.toDegrees(Math.atan(lastPose.distanceTo(p.getLocation()) / (X_OFFSET * 2))));
 				}
 
 			}
 			
+			// Set previous light values to current
 			lastColorLeft = newColorLeft;
 			lastColorRight = newColorRight;
 			
@@ -129,11 +131,11 @@ public class OdometryCorrection extends Thread {
 	 * Following a call to this method, the last heading is set to 0 to 
 	 * prevent subsequent corrections if a line is missed.
 	 * 
-	 * @return The amount the heading needs to be corrected
+	 * @return The amount the heading needs to be corrected in degrees
 	 */
 	public static double lastHeadingCorrection(){
-		double temp = lastHeading;
-		lastHeading = 0;
+		double temp = lastHeadingCorrection;
+		lastHeadingCorrection = 0;
 		return temp;}
 	
 	/****
@@ -149,8 +151,6 @@ public class OdometryCorrection extends Thread {
 		last = null;
 		return (off > Main.TILE_WIDTH/3f) ? 0 : -off;
 	}
-	
-	private static Pose last;
 
 
 }

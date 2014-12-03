@@ -24,11 +24,11 @@ import blocks.BlockRescuer;
  * Main class containing all constants. Primary control of the robot occurs here.
  * 
  * @author Scott Cooper
- *
+ * @since v0
  */
 public class Main {
 
-	public static final NXTRegulatedMotor 
+	public static final NXTRegulatedMotor
 		MOTOR_LEFT = Motor.A,
 		ARM = Motor.B,
 		MOTOR_RIGHT = Motor.C;
@@ -37,23 +37,24 @@ public class Main {
 	public static final ColorSensor COLORSENSOR_LEFT = new ColorSensor(SensorPort.S1),
 									COLORSENSOR_RIGHT = new ColorSensor(SensorPort.S3);
 	
-	private static DifferentialPilot pilot;
-	private static Navigator nav;
-	private static MovementController moveController;
-	private static BlockRescuer blockRescuer;
-	private static OdometryPoseProvider odo;
-	private static Localizer localizer;
-	private static Display display;
+	private static DifferentialPilot pilot;		// Driver to control relative movement
+	private static Navigator nav;				// Navigator to control movement using the odometer
+	private static MovementController moveController;	// MovementController for pathfinding
+	private static BlockRescuer blockRescuer;	
+	private static OdometryPoseProvider odo;			// Odometer
+	private static Localizer localizer;					
+	private static Display display;						
 	private static OdometryCorrection odoCorrection;
 	private static Arm arm;
-	private static long start, time; 
 	
+	// Robot paramaters
 	public static final float	 
 		LEFT_WHEEL_D = 4.155f,
 		RIGHT_WHEEL_D = 4.1645f,
 		WHEEL_BASE = 17.835f,		
 		TILE_WIDTH = 30.48f;
 	
+	// Total number of tiles on the map
 	public static final int
 		NUM_TILES = 12;
 	
@@ -61,8 +62,13 @@ public class Main {
 	// usage: maps[map_number][x][y]
 	private static final BitSet[] maps;
 
+	// Number of maps
 	private static final int NUM_MAPS = 6;
+	
+	// Current map number
 	private static int mapNumber = 0;
+	
+	// Block dropoff point
 	private static Waypoint dropoff = null;
 	
 	/***
@@ -105,7 +111,7 @@ public class Main {
 		setup();		
 		LCD.clear();
 		
-		
+		// Display current map befor starting
 		for (int x = 0; x < Main.NUM_TILES; x++){
 			for (int y = 0; y < Main.NUM_TILES; y++){
 				if (getCurrentMap().get(x * Main.NUM_TILES + y))
@@ -115,9 +121,9 @@ public class Main {
 		
 		
 		while (Button.waitForAnyPress() != Button.ID_ENTER);
-		start = System.currentTimeMillis();
-		time = -1;
+		long start = System.currentTimeMillis(), time = -1;
 		
+		// Start threads
 		display.start();
 		odoCorrection.start();
 		OdometryCorrection.enable();
@@ -128,7 +134,7 @@ public class Main {
 		OdometryCorrection.enable();
 		long x = System.currentTimeMillis();
 		
-		while (shouldContinue()){
+		while (shouldContinue(start, time)){
 			Display.setCurrentAction(Display.Action.MOVING);
 			moveController.travelToTile(1, 2, -90);
 			
@@ -164,7 +170,15 @@ public class Main {
 		System.exit(0);
 	}
 
-	private static boolean shouldContinue() {
+	/****
+	 * Determine if we should try to pick up another block based on time left and
+	 * previous timing values.
+	 * 
+	 * @param start The current time when we started
+	 * @param time The amount of time it took to find a block and move it to the dropoff
+	 * @return True iff we have enough time to get another block
+	 */
+	private static boolean shouldContinue(long start, long time) {
 		return time == -1 ? true : (7*60 + 30)*1000 + start - System.currentTimeMillis() > time; 
 	}
 
@@ -187,6 +201,9 @@ public class Main {
 		return maps[getMapNumber()];
 	}
 	
+	/***
+	 * Initialization of maps prior to starting
+	 */
 	static {		
 		// Add button listener to escape button to allow for exiting at any time
 		Button.ESCAPE.addButtonListener(
@@ -375,10 +392,18 @@ public class Main {
 		
 		maps[map].set(x * Main.NUM_TILES + y, v);}
 	
+	/****
+	 * Get the <code>DifferentialPilot</code> used by the robot
+	 * @return The primary <code>DifferentialPilot</code>
+	 */
 	public static DifferentialPilot getPilot() {
 		return pilot;}
 	
-	public static void setup(){
+	/***
+	 * Retrieve the information for the the map number, and the X and Y coordinates
+	 * of the dropoff point
+	 */
+	private static void setup(){
 		int x =0, y = 0, option;
 		do {
 			LCD.clear();
@@ -423,7 +448,6 @@ public class Main {
 			
 		} while (option != Button.ID_ENTER);
 		
-//		int ang = 0;
 		
 		if (x-1 >= 0 && !maps[mapNumber].get((x-1)*Main.NUM_TILES + y))
 			dropoff = new Waypoint(x-1, y, 0); // ang = 0;
@@ -433,8 +457,6 @@ public class Main {
 			dropoff = new Waypoint(x, y-1, 90); // ang = 90;
 		else
 			dropoff = new Waypoint(x, y+1, -90); // ang = -90;
-		
-//		dropoff = new Waypoint(x, y, ang);
 		
 	}
 	

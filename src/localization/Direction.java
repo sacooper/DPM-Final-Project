@@ -6,6 +6,7 @@ package localization;
  * The value of the enum represents the number of left turns from up
  * 
  * @author Scott Coooper
+ * @since v1
  */
 public enum Direction {
 	// 4 possible directions
@@ -40,12 +41,12 @@ public enum Direction {
 		}
 	}
 	
-	@Override
 	/*****
 	 * Get the value of this direction as a single character U, D, L, R
 	 * 
 	 * @return A string represnting this direction
 	 */
+	@Override
 	public String toString(){
 		switch(this){
 		case DOWN: 	return "D";

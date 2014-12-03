@@ -8,13 +8,17 @@ import main.Main;
  * of blocks.
  * 
  * @author Scott Cooper
+ * @since v1
  *
  */
 public class Arm {
 
 	/****
-	 * Current state of the arm
+	 * Enum representing the current state of the arm, preventing attempts
+	 * to lower the arm when it is already lowered, or raised when already raised, 
+	 * which may cause damage to the arm.
 	 * 
+	 * @since v1
 	 * @author Scott Cooper
 	 */
 	public static enum ArmState{
@@ -24,8 +28,8 @@ public class Arm {
 		/**Arm is currently raised*/
 		RAISED}
 	
-	private NXTRegulatedMotor arm;
-	private ArmState armState;
+	private NXTRegulatedMotor arm;		// Motor controlling the arm
+	private ArmState armState;			// Current state of the arm
 	
 	/****
 	 * Create a new arm in the raised position
@@ -78,8 +82,10 @@ public class Arm {
 	}
 
 	/***
-	 * Drop the block. If the arm is not
-	 * currently raised, a RuntimeException is thrown
+	 * Drop the block. Once the arm has been lowered, the
+	 * robot will reverse, preventing picking up the block
+	 * while raising the arm. If the arm is not
+	 * currently raised, a RuntimeException is thrown.
 	 */
 	public void drop() {
 		switch(this.armState){
@@ -95,8 +101,11 @@ public class Arm {
 	}
 	
 	/***
-	 * Raise the arm while reversing. If the arm is not currently lowered,
-	 * a RuntimeException is thrown
+	 * Raise the arm while reversing. The robot will first
+	 * grip the claw. Once a sufficient grip has been achieved,
+	 * the robot will reverse back 10cm to prevent
+	 * hitting objects while raising the block (i.e. the wall or other blocks)
+	 * If the arm is not currently lowered, a RuntimeException is thrown
 	 */
 	public void raise_with_rev(){
 		switch (this.armState){
